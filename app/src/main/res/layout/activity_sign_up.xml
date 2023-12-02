@@ -40,7 +40,6 @@
         android:layout_width="match_parent"
         android:layout_height="85dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="10dp"
         android:layout_marginEnd="32dp"
         android:hint="Password"
         app:helperTextTextColor="#FF1E1B">
@@ -57,7 +56,6 @@
         android:layout_width="match_parent"
         android:layout_height="85dp"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="10dp"
         android:layout_marginEnd="32dp"
         android:hint="Confirm Password"
         app:helperTextTextColor="#FF1E1B">
