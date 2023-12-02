@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.FlashCardApplication" parent="Theme.AppCompat.Light">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.FlashCardApplication" parent="Base.Theme.FlashCardApplication" />
+
+    <style name="Button.FlashCardApplication" parent="ThemeOverlay.AppCompat">
+        <item name="colorAccent">@color/button_color</item>
+    </style>
+</resources>

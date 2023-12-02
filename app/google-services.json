@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "784964090944",
+    "project_id": "midtermandroid-ce8ac",
+    "storage_bucket": "midtermandroid-ce8ac.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784964090944:android:ec954fbcbeb71a3fd933a5",
+        "android_client_info": {
+          "package_name": "com.example.MidtermAndroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDP1elHpWAWsnfdYwXpnGWl3LhuA1tggek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:784964090944:android:f5d5f5a1c9aadbaed933a5",
+        "android_client_info": {
+          "package_name": "com.example.flashcardapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDP1elHpWAWsnfdYwXpnGWl3LhuA1tggek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
