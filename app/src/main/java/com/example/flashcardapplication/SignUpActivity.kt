@@ -60,7 +60,7 @@ class SignUpActivity : AppCompatActivity() {
             auth?.createUserWithEmailAndPassword(email, password)
                 ?.addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        val user = auth?.currentUser
+                        // val user = auth?.currentUser
                         val intent = android.content.Intent(this, MainActivity::class.java)
                         startActivity(intent)
                         finish()

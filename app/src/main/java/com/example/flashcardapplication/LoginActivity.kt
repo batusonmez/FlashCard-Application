@@ -9,8 +9,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.marginEnd
-import androidx.core.view.marginStart
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
@@ -136,8 +134,7 @@ class LoginActivity : AppCompatActivity() {
                     startActivity(intent)
                     finish()
                 } else {
-                    val exception = task.exception
-                    when (exception) {
+                    when (task.exception) {
                         is FirebaseAuthInvalidUserException -> {
                             layoutEmail?.error = "Email not found"
                             layoutEmail?.isErrorEnabled = true

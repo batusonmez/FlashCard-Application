@@ -11,10 +11,10 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Register"
-        android:textSize="30dp"
+        android:text="@string/register"
+        android:textSize="30sp"
         android:textStyle="bold|italic"
-        android:layout_marginTop="140dp"
+        android:layout_marginTop="180dp"
         android:fontFamily="monospace"
         android:layout_gravity="center_horizontal"/>
 
@@ -25,15 +25,17 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="32dp"
-        android:hint="Email"
+        android:hint="@string/email"
         app:helperTextTextColor="#FF1E1B">
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_email"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"
             android:drawableStart="@drawable/envelope_regular"
-            android:drawablePadding="10dp"/>
+            android:drawablePadding="10dp"
+            android:inputType="textEmailAddress"
+            tools:ignore="VisualLintTextFieldSize,TouchTargetSizeCheck" />
     </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_password"
@@ -41,15 +43,17 @@
         android:layout_height="85dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:hint="Password"
+        android:hint="@string/password"
         app:helperTextTextColor="#FF1E1B">
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
             android:drawableStart="@drawable/lock_solid"
-            android:drawablePadding="10dp"/>
+            android:drawablePadding="10dp"
+            android:inputType="textPassword"
+            tools:ignore="VisualLintTextFieldSize,TouchTargetSizeCheck" />
     </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/layout_re_password"
@@ -57,26 +61,29 @@
         android:layout_height="85dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:hint="Confirm Password"
+        android:hint="@string/confirm_password"
         app:helperTextTextColor="#FF1E1B">
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/ed_re_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"
             android:drawableStart="@drawable/lock_solid"
-            android:drawablePadding="10dp"/>
+            android:drawablePadding="10dp"
+            android:inputType="textPassword"
+            tools:ignore="VisualLintTextFieldSize,TouchTargetSizeCheck" />
     </com.google.android.material.textfield.TextInputLayout>
     <Button
         android:id="@+id/btn_register"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:layout_marginLeft="32dp"
         android:layout_marginRight="32dp"
-        android:text="Register"
+        android:text="@string/register"
         android:background="@color/button_color"
-        android:textColor="@color/white"/>
+        android:textColor="@color/white"
+        tools:ignore="VisualLintButtonSize" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -85,15 +92,15 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="You already have an account?"
-            android:layout_marginLeft="32dp"
+            android:text="@string/you_already_have_an_account"
+            android:layout_marginStart="32dp"
             android:textColor="@color/black"/>
         <TextView
             android:id="@+id/tv_login"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Login"
-            android:layout_marginLeft="10dp"
+            android:text="@string/login"
+            android:layout_marginStart="10dp"
             android:textColor="@color/button_color"/>
     </LinearLayout>
 </LinearLayout>
