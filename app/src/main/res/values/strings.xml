@@ -8,4 +8,8 @@
     <string name="email">Email</string>
     <string name="you_already_have_an_account">You already have an account?</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="loi_giai">Lời giải</string>
+    <string name="trang_chu">Trang chủ</string>
+    <string name="thu_vien">Thư viện</string>
+    <string name="ho_so">Hồ sơ</string>
 </resources>
