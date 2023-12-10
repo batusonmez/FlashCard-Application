@@ -12,10 +12,10 @@
     <string name="trang_chu">Trang chủ</string>
     <string name="thu_vien">Thư viện</string>
     <string name="ho_so">Hồ sơ</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="tim_kiem">Tìm kiếm</string>
     <string name="hoc_phan">Học phần</string>
     <string name="xem_tat_ca">Xem tất cả</string>
     <string name="thu_muc">Thư mục</string>
+    <string name="tao_hoc_phan">Tạo học phần</string>
+    <string name="tao_thu_muc">Tạo thư mục</string>
 </resources>

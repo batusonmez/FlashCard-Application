@@ -10,4 +10,8 @@
     <style name="Button.FlashCardApplication" parent="ThemeOverlay.AppCompat">
         <item name="colorAccent">@color/button_color</item>
     </style>
+
+    <style name="BottomNavigationTextMargin">
+        <item name="android:layout_marginTop">20dp</item>
+    </style>
 </resources>
