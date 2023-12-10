@@ -9,8 +9,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/tao_hoc_phan"
-        android:padding="24dp"
-        android:drawablePadding="12dp"
+        android:padding="18dp"
+        android:drawablePadding="24dp"
         app:drawableStartCompat="@drawable/baseline_content_copy_24"
         android:background="?android:attr/selectableItemBackground"/>
     <View
@@ -22,8 +22,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/tao_thu_muc"
-        android:padding="24dp"
-        android:drawablePadding="12dp"
+        android:padding="18dp"
+        android:drawablePadding="24dp"
         app:drawableStartCompat="@drawable/outline_folder_24"
         android:background="?android:attr/selectableItemBackground"/>
 </LinearLayout>

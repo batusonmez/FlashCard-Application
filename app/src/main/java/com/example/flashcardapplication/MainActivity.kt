@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
@@ -14,16 +15,18 @@ import androidx.viewpager.widget.ViewPager
 import com.example.flashcardapplication.fragments.HomePageFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.example.flashcardapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
     private var viewPage: ViewPager? = null
     private var bottomNavigation : BottomNavigationView? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
-        viewPage = findViewById(R.id.view_page)
-        bottomNavigation = findViewById(R.id.bottom_navigation)
+        viewPage = binding.viewPager
+        bottomNavigation = binding.bottomNavigation
 
         val adapter = ViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(HomePageFragment(), "Trang chủ")
@@ -74,5 +77,7 @@ class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.bottom_sheet_dialog, container, false)
+
+
     }
 }

@@ -14,4 +14,6 @@
     <style name="BottomNavigationTextMargin">
         <item name="android:layout_marginTop">20dp</item>
     </style>
+
+    <style name="CreateLessonActivityTheme" parent="Theme.AppCompat.Light"/>
 </resources>

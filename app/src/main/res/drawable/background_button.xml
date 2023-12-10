@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shape -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/dark_blue" />
+            <corners android:radius="300dp" />
+        </shape>
+    </item>
+
+    <!-- Icon -->
+    <item android:drawable="@drawable/round_add_white_24"
+        android:gravity="center" />
+</layer-list>
