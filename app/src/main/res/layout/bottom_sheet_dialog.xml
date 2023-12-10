@@ -1,29 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-    <TextView
-        android:id="@+id/tv_course"
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/tao_hoc_phan"
-        android:padding="18dp"
-        android:drawablePadding="24dp"
-        app:drawableStartCompat="@drawable/baseline_content_copy_24"
-        android:background="?android:attr/selectableItemBackground"/>
+        android:foreground="?attr/selectableItemBackground">
+
+        <TextView
+            android:id="@+id/tv_course"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tao_hoc_phan"
+            android:padding="18dp"
+            android:drawablePadding="24dp"
+            app:drawableStartCompat="@drawable/baseline_content_copy_24"/>
+    </FrameLayout>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@android:color/darker_gray" />
-    <TextView
-        android:id="@+id/tv_folder"
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/tao_thu_muc"
-        android:padding="18dp"
-        android:drawablePadding="24dp"
-        app:drawableStartCompat="@drawable/outline_folder_24"
-        android:background="?android:attr/selectableItemBackground"/>
+        android:foreground="?attr/selectableItemBackground">
+
+        <TextView
+            android:id="@+id/tv_folder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/tao_thu_muc"
+            android:padding="18dp"
+            android:drawablePadding="24dp"
+            app:drawableStartCompat="@drawable/outline_folder_24"/>
+    </FrameLayout>
+
 </LinearLayout>
