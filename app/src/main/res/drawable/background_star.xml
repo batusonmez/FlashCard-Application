@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Shape -->
+    <item>
+        <shape android:shape="oval">
+        </shape>
+    </item>
+
+    <!-- Icon -->
+    <item android:drawable="@drawable/outline_star_border_24"
+        android:gravity="center" />
+</layer-list>

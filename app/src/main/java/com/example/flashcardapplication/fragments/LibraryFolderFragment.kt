@@ -19,7 +19,7 @@ class LibraryFolderFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val binding = FragmentLibraryFolderBinding.inflate(inflater, container, false)
 
         data = ArrayList()
@@ -50,14 +50,15 @@ class LibraryFolderAdapter(
     private var data: ArrayList<Data>) :
     RecyclerView.Adapter<LibraryFolderAdapter.ViewHolder>() {
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var tvName: TextView? = null
-        var tvNumberLesson: TextView? = null
-        var tvNameAuthor: TextView? = null
-        var imgAvatar: de.hdodenhof.circleimageview.CircleImageView? = null
+        var tvTopicFolder = itemView.findViewById<TextView>(R.id.tv_topic_folder)!!
+        var tvNumberLesson = itemView.findViewById<TextView>(R.id.tv_number_lesson)!!
+        var civAvatar = itemView.findViewById<de.hdodenhof.circleimageview.CircleImageView>(R.id.civ_avatar)!!
+        var tvNameAuthor = itemView.findViewById<TextView>(R.id.tv_name_author)!!
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(context).inflate(R.layout.item_folder, parent, false)
+        val view = LayoutInflater.from(context).
+                inflate(R.layout.item_folder, parent, false)
         return ViewHolder(view)
     }
 
@@ -67,11 +68,11 @@ class LibraryFolderAdapter(
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        var item = data[position]
-        holder.tvName?.text = item.name
-        holder.tvNumberLesson?.text = item.numberLesson.toString() + "học phần"
-        holder.tvNameAuthor?.text = item.nameAuthor
-        Picasso.get().load(item.avatar).into(holder.imgAvatar)
+        val item = data[position]
+        holder.tvTopicFolder.text = item.name
+        holder.tvNumberLesson.text = item.numberLesson.toString() + " học phần"
+        Picasso.get().load(item.avatar).into(holder.civAvatar)
+        holder.tvNameAuthor.text = item.nameAuthor.toString()
     }
 
 }

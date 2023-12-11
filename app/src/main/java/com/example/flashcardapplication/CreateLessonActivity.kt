@@ -3,6 +3,7 @@ package com.example.flashcardapplication
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -10,6 +11,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
@@ -48,7 +50,7 @@ class CreateLessonActivity : AppCompatActivity() {
         })
 
         data?.let {
-            binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it)
+            binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it, supportActionBar!!)
         }
         binding.rcvCreateLesson.layoutManager =
             androidx.recyclerview.widget.LinearLayoutManager(this)
@@ -86,13 +88,17 @@ class Terminology: Serializable {
 
 class CreateLessonAdapter(
     private val context: Context,
-    private val data: ArrayList<Terminology>) :
+    private val data: ArrayList<Terminology>,
+    private val supportActionBar: androidx.appcompat.app.ActionBar) :
     RecyclerView.Adapter<CreateLessonAdapter.ViewHolder>() {
 
     fun getTerminologyData(): ArrayList<Terminology> {
         return data
     }
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val btnVolume: Button? = view.findViewById(R.id.btn_volume)
+        val btnStar: Button? = view.findViewById(R.id.btn_star)
+        val btnDelete: Button? = view.findViewById(R.id.btn_delete)
         val edtTerminology: EditText? = view.findViewById(R.id.edt_terminology)
         val edtDefinition: EditText? = view.findViewById(R.id.edt_definition)
     }
@@ -101,6 +107,7 @@ class CreateLessonAdapter(
         return ViewHolder(view)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = data[position]
         holder.edtTerminology?.setText(item.terminology)
@@ -111,7 +118,6 @@ class CreateLessonAdapter(
                 item.terminology = s.toString()
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                // do nothing
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 // do nothing
@@ -128,6 +134,40 @@ class CreateLessonAdapter(
                 // do nothing
             }
         })
+
+        holder.edtTerminology?.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                supportActionBar.title = (position + 1).toString() + "/" + data.size
+            }
+        }
+        holder.edtDefinition?.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                supportActionBar.title = (position + 1).toString() + "/" + data.size
+            }
+        }
+
+        holder.btnDelete?.setOnClickListener {
+            data.removeAt(position)
+            notifyDataSetChanged()
+            if (position == data.size) {
+                supportActionBar.title = data.size.toString() + "/" + data.size
+            }
+        }
+
+        var textToSpeech: TextToSpeech? = null
+        holder.btnVolume?.setOnClickListener {
+            textToSpeech = TextToSpeech(context) { status ->
+                if (status != TextToSpeech.ERROR) {
+                    textToSpeech?.language = java.util.Locale.US
+                    textToSpeech?.setSpeechRate(0.5f)
+                    textToSpeech?.speak(item.terminology, TextToSpeech.QUEUE_ADD, null, null)
+                }
+            }
+        }
+
+        holder.btnStar?.setOnClickListener {
+            // handle to add terminology to favorite
+        }
     }
 
     override fun getItemCount(): Int {
