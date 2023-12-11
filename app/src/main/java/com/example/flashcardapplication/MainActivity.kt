@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
 import com.example.flashcardapplication.databinding.ActivityMainBinding
 import com.example.flashcardapplication.fragments.HomePageFragment
+import com.example.flashcardapplication.fragments.LibraryFragment
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +27,8 @@ class MainActivity : AppCompatActivity() {
 
         val adapter = ViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(HomePageFragment(), "Trang chủ")
+        adapter.addFragment(HomePageFragment(), "Lời giải") // change this
+        adapter.addFragment(LibraryFragment(), "Thư viện")
 
 
         binding.viewPager.adapter = adapter
@@ -40,8 +43,8 @@ class MainActivity : AppCompatActivity() {
                     bottomSheetFragment.show(supportFragmentManager, bottomSheetFragment.tag)
                 }
 
-                R.id.i_thu_vien -> binding.viewPager.currentItem = 3
-                R.id.i_ho_so -> binding.viewPager.currentItem = 4
+                R.id.i_thu_vien -> binding.viewPager.currentItem = 2
+                R.id.i_ho_so -> binding.viewPager.currentItem = 3
             }
             true
         }
@@ -87,7 +90,7 @@ class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         tvFolder?.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         tvFolder?.setOnClickListener {
-            AlertDialog.Builder(MainActivity())
+            val dialog = AlertDialog.Builder(it.context)
                 .setTitle("Tạo thư mục")
                 .setView(R.layout.custom_view_dialog)
                 .setPositiveButton("Ok") { dialog, _ ->
@@ -97,7 +100,7 @@ class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
                     dialog.dismiss()
                 }
                 .create()
-                .show()
+            dialog.show()
         }
 
         return view
