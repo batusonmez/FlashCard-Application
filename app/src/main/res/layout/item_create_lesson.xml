@@ -13,7 +13,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:gravity="end">
-
         <Button
             android:id="@+id/btn_volume"
             style="?android:attr/buttonBarButtonStyle"
@@ -42,15 +41,15 @@
             tools:ignore="SpeakableTextPresentCheck" />
     </LinearLayout>
 
-    <EditText
-        android:id="@+id/edt_terminology"
+    <AutoCompleteTextView
+        android:id="@+id/actv_terminology"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:inputType="text"
         android:minHeight="48dp"
-        tools:ignore="Autofill,LabelFor,SpeakableTextPresentCheck,VisualLintTextFieldSize" />
+        tools:ignore="LabelFor,SpeakableTextPresentCheck,VisualLintTextFieldSize" />
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
