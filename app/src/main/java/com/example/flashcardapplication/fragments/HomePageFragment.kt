@@ -133,7 +133,7 @@ class DataAdapter(
         val item = data[position]
         holder.tvNameCourse?.text = item.name
         holder.tvNumberLesson?.text = item.numberLesson.toString() + " thuật ngữ"
-        holder.civAvatar?.setImageURI(item.avatar)
+        Picasso.get().load(item.avatar).into(holder.civAvatar)
         holder.tvNameAuthor?.text = item.nameAuthor
     }
 

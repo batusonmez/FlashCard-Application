@@ -20,6 +20,7 @@ class LibraryFragment : Fragment() {
 
         val adapter = ViewPagerLibraryAdapter(childFragmentManager)
         adapter.addFragment(LibraryCourseFragment(), "Học phần")
+        adapter.addFragment(LibraryFolderFragment(), "Thư mục")
 
 
         binding.tabLayout.setupWithViewPager(binding.viewPager)
