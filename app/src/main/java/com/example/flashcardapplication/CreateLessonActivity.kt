@@ -27,7 +27,6 @@ import android.widget.MultiAutoCompleteTextView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -45,15 +44,15 @@ import kotlinx.coroutines.withContext
 import java.io.Serializable
 import kotlin.math.min
 
-@Suppress("NAME_SHADOWING", "DEPRECATION")
+@Suppress("NAME_SHADOWING", "KotlinConstantConditions")
 class CreateLessonActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCreateLessonBinding
     private var data: ArrayList<Terminology>? = null
-    private var loading: Boolean = true
-    private var pastVisibleItems: Int = 0
-    private var visibleItemCount: Int = 0
-    private var totalItemCount: Int = 0
-
+    private var fullData = ArrayList<Terminology>()
+    private var isLoading = false
+    private var isLastPage = false
+    private var currentPage = 1
+    private var totalPage = 1
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,24 +71,49 @@ class CreateLessonActivity : AppCompatActivity() {
         binding.tvDescription.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         // handle to open dialog to input description
 
-        // default to add 2 terminology
+        // default to add 3 terminology
         data = ArrayList()
-        data?.add(Terminology().apply {
-            terminology = ""
-            definition = ""
-        })
-        data?.add(Terminology().apply {
-            terminology = ""
-            definition = ""
-        })
-
+        for(i in 0..2) {
+            data?.add(Terminology().apply {
+                terminology = ""
+                definition = ""
+            })
+        }
         data?.let {
             binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it, supportActionBar!!)
         }
         binding.rcvCreateLesson.setHasFixedSize(true)
-
-        binding.rcvCreateLesson.layoutManager =
-            androidx.recyclerview.widget.LinearLayoutManager(this)
+        val layoutManager = LinearLayoutManager(this)
+        binding.rcvCreateLesson.layoutManager = layoutManager
+        binding.rcvCreateLesson.addOnScrollListener(object : PaginationScrollListener(layoutManager) {
+            override fun isLastPage(): Boolean {
+                return currentPage == totalPage
+            }
+            override fun isLoading(): Boolean {
+                return isLoading
+            }
+            override fun loadMoreItems() {
+                isLoading = true
+                currentPage += 1
+                if (currentPage <= totalPage) {
+                    Log.e("TAG", "isLastPage $isLastPage, isLoading $isLoading, " +
+                            "currentPage $currentPage, totalPage $totalPage")
+                    val start = (currentPage - 1) * 3
+                    val end = min(start + 2, fullData.size - 1)
+                    for (item in start..end) {
+                        data?.add(fullData[item])
+                        Log.e("TAG", "data " + fullData[item].terminology + ", " + fullData[item].definition)
+                    }
+                    isLoading = false
+                    binding.rcvCreateLesson.post {
+                        runOnUiThread {
+                            binding.rcvCreateLesson.adapter?.notifyItemRangeInserted(start, end)
+                            binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(start, end)
+                        }
+                    }
+                }
+            }
+        })
 
         binding.btnCreateLesson.setOnClickListener {
             data?.add(Terminology().apply {
@@ -110,20 +134,20 @@ class CreateLessonActivity : AppCompatActivity() {
         }
     private var filePicker =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            result.data?.data?.let{ uri ->
-                if(isCSVFile(uri))
-                    readCSVFile(uri)
-                else{
-                    AlertDialog.Builder(this)
-                        .setTitle("Lỗi")
-                        .setMessage("File không đúng định dạng")
-                        .setPositiveButton("OK") { _, _ -> }
-                        .show()
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.data?.let{ uri ->
+                    if(isCSVFile(uri))
+                        readCSVFile(uri)
+                    else{
+                        AlertDialog.Builder(this)
+                            .setTitle("Lỗi")
+                            .setMessage("File không đúng định dạng")
+                            .setPositiveButton("OK") { _, _ -> }
+                            .show()
+                    }
                 }
             }
         }
-    }
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             type = "*/*"
@@ -138,7 +162,8 @@ class CreateLessonActivity : AppCompatActivity() {
     private fun readCSVFile(uri: Uri) {
         val inputStream = contentResolver.openInputStream(uri)
         val bufferedReader = inputStream?.bufferedReader()
-        data = ArrayList()
+        data?.clear()
+        fullData.clear()
 
         val topic = bufferedReader?.readLine()
         binding.edtTopic.setText(topic)
@@ -146,13 +171,20 @@ class CreateLessonActivity : AppCompatActivity() {
         bufferedReader?.readLine()
         bufferedReader?.forEachLine {
             val line = it.split(",")
-            data!!.add(Terminology().apply {
+            fullData.add(Terminology().apply {
                 terminology = line[0]
                 definition = line[1]
             })
         }
         bufferedReader?.close()
-        binding.rcvCreateLesson.adapter?.notifyDataSetChanged()
+        currentPage = 1
+        totalPage = fullData.size / 3 + 1
+        // first data
+        for (item in 0..min(fullData.size - 1, 2)) {
+            data?.add(fullData[item])
+        }
+        binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, data!!, supportActionBar!!)
+        binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(0, data!!.size)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -190,6 +222,9 @@ class CreateLessonAdapter(
     RecyclerView.Adapter<CreateLessonAdapter.ViewHolder>() {
     private var translatorToVN = false
     private var translator: Translator? = null
+    private var textToSpeech: TextToSpeech? = null
+    private val vocabularies = readVocabularyFromRawFile(R.raw.words_alpha, context)
+    private val adapter = LimitedArrayAdapter(context, android.R.layout.simple_list_item_1, vocabularies)
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvNumber: TextView? = view.findViewById(R.id.tv_number)
         val btnVolume: Button? = view.findViewById(R.id.btn_volume)
@@ -200,6 +235,7 @@ class CreateLessonAdapter(
     }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.item_create_lesson, parent, false)
+        downloadModel()
         return ViewHolder(view)
     }
 
@@ -210,13 +246,9 @@ class CreateLessonAdapter(
         holder.mactvTerminology?.setText(item.terminology)
         holder.edtDefinition?.setText(item.definition)
 
-        val vocabularies = readVocabularyFromRawFile(R.raw.words_alpha, context)
-        val adapter =
-            LimitedArrayAdapter(context, android.R.layout.simple_list_item_1, vocabularies)
         holder.mactvTerminology?.setTokenizer(SpaceTokenizer())
         holder.mactvTerminology?.setAdapter(adapter)
 
-        downloadModel()
         holder.mactvTerminology?.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -272,7 +304,6 @@ class CreateLessonAdapter(
             }
         }
 
-        var textToSpeech: TextToSpeech? = null
         holder.btnVolume?.setOnClickListener {
             textToSpeech = TextToSpeech(context) { status ->
                 if (status != TextToSpeech.ERROR) {
@@ -376,6 +407,25 @@ class SpaceTokenizer : MultiAutoCompleteTextView.Tokenizer {
                 sp
             } else {
                 "$text "
+            }
+        }
+    }
+}
+
+abstract class PaginationScrollListener(
+    private val layoutManager: LinearLayoutManager) :
+    RecyclerView.OnScrollListener() {
+    abstract fun isLastPage(): Boolean
+    abstract fun isLoading(): Boolean
+    abstract fun loadMoreItems()
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        if (dy < 0) return
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.itemCount
+        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+        if (!isLoading() && !isLastPage()) {
+            if (visibleItemCount + firstVisibleItemPosition >= totalItemCount && firstVisibleItemPosition >= 0) {
+                loadMoreItems()
             }
         }
     }

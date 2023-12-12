@@ -6,39 +6,25 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <FrameLayout
+    <TextView
+        android:id="@+id/tv_course"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:foreground="?attr/selectableItemBackground">
-
-        <TextView
-            android:id="@+id/tv_course"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tao_hoc_phan"
-            android:padding="18dp"
-            android:drawablePadding="24dp"
-            app:drawableStartCompat="@drawable/baseline_content_copy_24"/>
-    </FrameLayout>
-
+        android:text="@string/tao_hoc_phan"
+        android:padding="18dp"
+        android:drawablePadding="24dp"
+        app:drawableStartCompat="@drawable/baseline_content_copy_24"/>
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="@android:color/darker_gray" />
 
-    <FrameLayout
+    <TextView
+        android:id="@+id/tv_folder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:foreground="?attr/selectableItemBackground">
-
-        <TextView
-            android:id="@+id/tv_folder"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/tao_thu_muc"
-            android:padding="18dp"
-            android:drawablePadding="24dp"
-            app:drawableStartCompat="@drawable/outline_folder_24"/>
-    </FrameLayout>
-
+        android:text="@string/tao_thu_muc"
+        android:padding="18dp"
+        android:drawablePadding="24dp"
+        app:drawableStartCompat="@drawable/outline_folder_24"/>
 </LinearLayout>
