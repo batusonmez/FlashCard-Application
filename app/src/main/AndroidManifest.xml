@@ -7,6 +7,7 @@
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
+    <uses-permission android:name="ACTION" />
 
     <application
         android:allowBackup="true"
