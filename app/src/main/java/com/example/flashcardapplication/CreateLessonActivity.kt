@@ -5,7 +5,10 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.speech.tts.TextToSpeech
@@ -26,11 +29,21 @@ import android.widget.EditText
 import android.widget.MultiAutoCompleteTextView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
+import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.flashcardapplication.database.DataSyncHelper
+import com.example.flashcardapplication.database.NetworkListener
+import com.example.flashcardapplication.database.NetworkReceiver
+import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.ActivityCreateLessonBinding
+import com.example.flashcardapplication.models.Terminology
+import com.example.flashcardapplication.models.Topic
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
@@ -42,17 +55,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.Serializable
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.min
 
-@Suppress("NAME_SHADOWING", "KotlinConstantConditions")
-class CreateLessonActivity : AppCompatActivity() {
+@Suppress("DEPRECATION", "NAME_SHADOWING")
+class CreateLessonActivity : AppCompatActivity(), NetworkListener {
     private lateinit var binding: ActivityCreateLessonBinding
-    private var data: ArrayList<Terminology>? = null
-    private var fullData = ArrayList<Terminology>()
+    private var data: ArrayList<Term>? = null
+    private var fullData = ArrayList<Term>()
     private var isLoading = false
-    private var isLastPage = false
     private var currentPage = 1
     private var totalPage = 1
+    private val lifecycleCoroutineScope = lifecycle.coroutineScope
+    private val networkReceiver = NetworkReceiver(listener = this)
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,20 +77,21 @@ class CreateLessonActivity : AppCompatActivity() {
         supportActionBar?.title = "Tạo học phần"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        val topic = binding.edtTopic.text.toString()
-
         binding.tvScan.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         binding.tvScan.setOnClickListener {
             requestPermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         }
 
         binding.tvDescription.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-        // handle to open dialog to input description
+        binding.tvDescription.setOnClickListener {
+            binding.tvDescription.visibility = View.GONE
+            binding.llDescription.visibility = View.VISIBLE
+        }
 
         // default to add 3 terminology
         data = ArrayList()
         for(i in 0..2) {
-            data?.add(Terminology().apply {
+            data?.add(Term().apply {
                 terminology = ""
                 definition = ""
             })
@@ -85,7 +102,8 @@ class CreateLessonActivity : AppCompatActivity() {
         binding.rcvCreateLesson.setHasFixedSize(true)
         val layoutManager = LinearLayoutManager(this)
         binding.rcvCreateLesson.layoutManager = layoutManager
-        binding.rcvCreateLesson.addOnScrollListener(object : PaginationScrollListener(layoutManager) {
+        binding.rcvCreateLesson.addOnScrollListener(object :
+            PaginationScrollListener(layoutManager) {
             override fun isLastPage(): Boolean {
                 return currentPage == totalPage
             }
@@ -96,13 +114,10 @@ class CreateLessonActivity : AppCompatActivity() {
                 isLoading = true
                 currentPage += 1
                 if (currentPage <= totalPage) {
-                    Log.e("TAG", "isLastPage $isLastPage, isLoading $isLoading, " +
-                            "currentPage $currentPage, totalPage $totalPage")
                     val start = (currentPage - 1) * 3
                     val end = min(start + 2, fullData.size - 1)
                     for (item in start..end) {
                         data?.add(fullData[item])
-                        Log.e("TAG", "data " + fullData[item].terminology + ", " + fullData[item].definition)
                     }
                     isLoading = false
                     binding.rcvCreateLesson.post {
@@ -116,14 +131,23 @@ class CreateLessonActivity : AppCompatActivity() {
         })
 
         binding.btnCreateLesson.setOnClickListener {
-            data?.add(Terminology().apply {
+            data?.add(Term().apply {
                 terminology = ""
                 definition = ""
             })
             binding.rcvCreateLesson.adapter?.notifyItemInserted(data!!.size - 1)
             binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(data!!.size - 1, data!!.size)
+            binding.rcvCreateLesson.post {
+                binding.rcvCreateLesson.smoothScrollToPosition(data!!.size - 1)
+            }
+            binding.tvDescription.visibility = View.VISIBLE
+            binding.llDescription.visibility = View.GONE
         }
-
+    }
+    override fun onStart() {
+        super.onStart()
+        val intentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        registerReceiver(networkReceiver, intentFilter)
     }
 
     private var requestPermission =
@@ -171,7 +195,7 @@ class CreateLessonActivity : AppCompatActivity() {
         bufferedReader?.readLine()
         bufferedReader?.forEachLine {
             val line = it.split(",")
-            fullData.add(Terminology().apply {
+            fullData.add(Term().apply {
                 terminology = line[0]
                 definition = line[1]
             })
@@ -192,32 +216,75 @@ class CreateLessonActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.i_save -> {
+                val database = RoomDb.getDatabase(this)
+                val name: String = binding.edtTopic.text.toString().ifEmpty { "Nháp" }
+                val description: String = binding.edtDescription.text.toString().ifEmpty { "" }
+                val data = (binding.rcvCreateLesson.adapter as CreateLessonAdapter).getTerminologyData()
+                val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                val status = "public"
+                val owner = FirebaseAuth.getInstance().currentUser?.email.toString()
+                val topic = Topic(0, name, description, timestamp, status, owner)
+                val id = database.ApplicationDao().insertTopic(topic).toInt()
 
-                // to test data
-                val dataTest: ArrayList<Terminology>?
-                dataTest = (binding.rcvCreateLesson.adapter as CreateLessonAdapter).getTerminologyData()
+                if (id > 0) {
+                    val dataTerm = ArrayList<Terminology>()
+                    for (item in fullData) {
+                        dataTerm.add(Terminology(0, item.terminology!!, item.definition!!, id))
+                        Log.e("TAG", "onOptionsItemSelected: " + item.terminology + " " + item.definition + " " + id)
+                    }
 
-                for (item in dataTest) {
-                    Log.e("TAG", "onCreate: " + item.terminology + ", " + item.definition)
+                    if (dataTerm.isNotEmpty()) {
+                        database.ApplicationDao().insertAllTerminologies(dataTerm)
+                    }
                 }
-                // handle to save data to database
+
+            }
+            android.R.id.home -> {
+                finish()
+            }
+            R.id.i_setting -> {
+                // handle to setting
             }
         }
         return super.onOptionsItemSelected(item)
     }
+
+    override fun onNetworkAvailable() {
+        lifecycleCoroutineScope.launchWhenStarted {
+            DataSyncHelper(
+                firebaseDb = FirebaseFirestore.getInstance(),
+                auth = FirebaseAuth.getInstance(),
+                context = this@CreateLessonActivity
+            ).syncData()
+        }
+    }
+
+    override fun onNetworkUnavailable() {
+        // nothing
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(networkReceiver)
+    }
 }
 
-class Terminology: Serializable {
-    var terminology: String? = null
+class Term(
+    var terminology: String? = null,
     var definition: String? = null
+): Serializable {
+    override fun toString(): String {
+        return "Terminology(terminology=$terminology, definition=$definition)"
+    }
 }
 
 class CreateLessonAdapter(
     private val context: Context,
-    private val data: ArrayList<Terminology>,
+    private val data: ArrayList<Term>,
     private val supportActionBar: androidx.appcompat.app.ActionBar) :
     RecyclerView.Adapter<CreateLessonAdapter.ViewHolder>() {
     private var translatorToVN = false
@@ -333,10 +400,10 @@ class CreateLessonAdapter(
         }
         return vocabularies
     }
-    fun getTerminologyData(): ArrayList<Terminology> {
+    fun getTerminologyData(): ArrayList<Term> {
         return data.filter {
             it.terminology?.isNotEmpty() == true && it.definition?.isNotEmpty() == true }
-                as ArrayList<Terminology>
+                as ArrayList<Term>
     }
 
     private fun downloadModel(){

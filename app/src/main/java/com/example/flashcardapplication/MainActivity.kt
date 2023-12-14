@@ -3,6 +3,8 @@
 package com.example.flashcardapplication
 
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,13 +16,22 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.example.flashcardapplication.database.DataSyncHelper
+import com.example.flashcardapplication.database.NetworkListener
+import com.example.flashcardapplication.database.NetworkReceiver
 import com.example.flashcardapplication.databinding.ActivityMainBinding
 import com.example.flashcardapplication.fragments.HomePageFragment
 import com.example.flashcardapplication.fragments.LibraryFragment
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), NetworkListener{
     private lateinit var binding: ActivityMainBinding
+    private val networkReceiver = NetworkReceiver(listener = this)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
@@ -48,6 +59,38 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val intentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        registerReceiver(networkReceiver, intentFilter)
+    }
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun onNetworkAvailable() {
+        GlobalScope.launch {
+            DataSyncHelper(
+                firebaseDb = FirebaseFirestore.getInstance(),
+                auth = FirebaseAuth.getInstance(),
+                context = this@MainActivity
+            ).syncData()
+        }
+    }
+
+    override fun onNetworkUnavailable() {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Không có kết nối mạng")
+            .setMessage("Vui lòng kiểm tra lại kết nối mạng")
+            .setPositiveButton("Ok") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .create()
+        dialog.show()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(networkReceiver)
     }
 
 }

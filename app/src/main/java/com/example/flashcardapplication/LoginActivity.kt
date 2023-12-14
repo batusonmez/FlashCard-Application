@@ -16,7 +16,6 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.firestore.FirebaseFirestore
 
-@Suppress("NAME_SHADOWING")
 class LoginActivity : AppCompatActivity() {
     private var auth: FirebaseAuth? = null
     private var database: FirebaseFirestore? = null
@@ -115,21 +114,6 @@ class LoginActivity : AppCompatActivity() {
         auth?.signInWithEmailAndPassword(email, password)
             ?.addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    val user = auth?.currentUser
-                    val uid = user?.uid
-                    val email = user?.email
-                    val name = user?.displayName
-                    val photoUrl = user?.photoUrl
-
-                    val userMap = hashMapOf(
-                        "uid" to uid,
-                        "email" to email,
-                        "name" to name,
-                        "photoUrl" to photoUrl
-                    )
-
-                    database?.collection("users")?.document(uid!!)?.set(userMap)
-
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                     finish()
