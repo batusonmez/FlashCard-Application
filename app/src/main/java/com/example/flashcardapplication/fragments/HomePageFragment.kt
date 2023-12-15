@@ -14,7 +14,9 @@ import com.example.flashcardapplication.R
 import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.FragmentHomePageBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
 import java.io.Serializable
@@ -39,6 +41,18 @@ class HomePageFragment : Fragment() {
 
         val currentUser = auth?.currentUser
         if(currentUser != null) {
+            // delete this code later
+            val storageRef = FirebaseStorage.getInstance().reference.child("avatar/images_1.png")
+            storageRef.downloadUrl.addOnCompleteListener {task ->
+                if (task.isSuccessful){
+                    val downloadUri = task.result
+                    currentUser.updateProfile(
+                        UserProfileChangeRequest.Builder()
+                            .setDisplayName(currentUser.email?.split("@")?.get(0))
+                            .setPhotoUri(downloadUri)
+                            .build())
+                }
+            }
             Picasso.get().load(currentUser.photoUrl).into(binding.ivAvatar)
             binding.tvHelloUser.text = "Xin chào, ${currentUser.displayName}"
         }
@@ -50,8 +64,8 @@ class HomePageFragment : Fragment() {
         binding.tvAllCourse.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         // redirect to all course in layout library
 
-        val database = context?.let { RoomDb.getDatabase(it) }
-        val topics = database?.ApplicationDao()
+        val roomDb = context?.let { RoomDb.getDatabase(it) }
+        val topics = roomDb?.ApplicationDao()
             ?.getAllTopics()
             ?.filter { it.owner == auth?.currentUser?.email }
             ?.take(5)
@@ -60,7 +74,7 @@ class HomePageFragment : Fragment() {
             if (topics.isNotEmpty()) {
                 binding.llCourse.visibility = View.VISIBLE
                 for(item in topics) {
-                    val topicWithTerminologies = database.ApplicationDao().getTopicWithTerminologies(item.id)
+                    val topicWithTerminologies = roomDb.ApplicationDao().getTopicWithTerminologies(item.id)
                     val data = Data().apply {
                         name = item.name
                         numberLesson = topicWithTerminologies.terminologies.size
@@ -87,7 +101,7 @@ class HomePageFragment : Fragment() {
         // redirect to all folder in layout library
 
 
-        val folders = database?.ApplicationDao()
+        val folders = roomDb?.ApplicationDao()
             ?.getFoldersWithTopics()
             ?.filter { it.folder.owner == auth?.currentUser?.email }
             ?.take(5)
@@ -127,6 +141,10 @@ class Data : Serializable {
     var numberLesson: Int? = null
     var avatar: Uri? = null
     var nameAuthor: String? = null
+
+    override fun toString(): String {
+        return "Data(name=$name, numberLesson=$numberLesson, avatar=$avatar, nameAuthor=$nameAuthor)"
+    }
 }
 
 class DataAdapter(

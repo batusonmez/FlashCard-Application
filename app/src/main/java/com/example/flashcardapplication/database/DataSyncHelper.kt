@@ -17,13 +17,33 @@ class DataSyncHelper(
     private val firebaseDb: FirebaseFirestore,
     private val auth: FirebaseAuth,
     context: Context
-) {
+){
+    private var ref : ArrayList<TopicFolderCrossRef> = ArrayList()
+    private var terminology : ArrayList<Terminology> = ArrayList()
     private var folderDelete: ArrayList<Folder> = ArrayList()
     private var topicDelete: ArrayList<Topic> = ArrayList()
     var database:RoomDb = RoomDb.getDatabase(context)
+    private var isSync : Boolean = false
+    private var isSyncDelete : Boolean = true
+    fun getIsSync() : Boolean{
+        return isSync
+    }
+    fun setIsSync(isSync : Boolean){
+        this.isSync = isSync
+    }
+    fun getIsSyncDelete() : Boolean{
+        return isSyncDelete
+    }
+    fun setIsSyncDelete(isSyncDelete : Boolean){
+        this.isSyncDelete = isSyncDelete
+    }
+
     suspend fun syncData() {
-        syncUp()
-        syncDown()
+        if(!isSync){
+            syncUp()
+            syncDown()
+            setIsSync(true)
+        }
     }
 
     @SuppressLint("RestrictedApi")
@@ -167,23 +187,71 @@ class DataSyncHelper(
 
     // run when network isn't available
     fun localDelete(folder: Folder?, topic: Topic?) {
+        setIsSyncDelete(false)
+        if(folder != null && topic != null){
+            ref.addAll(database.ApplicationDao().getAllTopicFolderCrossRef()
+                .filter { it.topicId == topic.id && it.folderId == folder.id })
+            database.ApplicationDao().deleteTopicFolderCrossRef(
+                TopicFolderCrossRef(topic.id, folder.id)
+            )
+            return
+        }
         if (folder != null) {
+            ref.addAll(database.ApplicationDao().getAllTopicFolderCrossRef()
+                .filter { it.folderId == folder.id })
+            for (r in ref){
+                database.ApplicationDao().deleteTopicFolderCrossRef(r)
+            }
             folderDelete.add(folder)
             database.ApplicationDao().deleteFolder(folder)
+            return
         }
         if (topic != null) {
+            ref.addAll(database.ApplicationDao().getAllTopicFolderCrossRef()
+                .filter { it.topicId == topic.id })
+            for (reference in ref){
+                database.ApplicationDao().deleteTopicFolderCrossRef(reference)
+            }
+
+            terminology.addAll(database.ApplicationDao().getAllTerminologies()
+                .filter { it.topicId == topic.id })
+            for (term in terminology){
+                database.ApplicationDao().deleteTerminology(term)
+            }
+
             topicDelete.add(topic)
             database.ApplicationDao().deleteTopic(topic)
+            return
         }
     }
-
     // sync data when from offline to online
     suspend fun serverDelete() {
         val refCollection = firebaseDb.collection("data")
             .document(auth.currentUser?.uid.toString())
             .collection("topic_folder_refs")
 
+        for(term in terminology){
+            auth.currentUser?.uid?.let {
+                firebaseDb.collection("data")
+                    .document(it)
+                    .collection("terminologies")
+                    .document(term.id.toString())
+                    .delete()
+                    .addOnSuccessListener {
+                        terminology.remove(term)
+                    }.await()
+            }
+        }
 
+        for (reference in ref) {
+            refCollection.whereEqualTo("topicId", reference.topicId)
+                .whereEqualTo("folderId", reference.folderId)
+                .get().addOnSuccessListener { querySnapshot ->
+                    for (document in querySnapshot.documents) {
+                        document.reference.delete()
+                    }
+                }.await()
+        }
 
         for (folder in folderDelete) {
             refCollection.whereEqualTo("folderId", folder.id)
@@ -192,17 +260,6 @@ class DataSyncHelper(
                         document.reference.delete()
                     }
                 }.await()
-
-            auth.currentUser?.uid?.let {
-                firebaseDb.collection("data")
-                    .document(it)
-                    .collection("folders")
-                    .document(folder.id.toString())
-                    .delete()
-                    .addOnSuccessListener {
-                        folderDelete.remove(folder)
-                    }.await()
-            }
         }
 
         for (topic in topicDelete) {
@@ -212,90 +269,9 @@ class DataSyncHelper(
                         document.reference.delete()
                     }
                 }.await()
-
-            auth.currentUser?.uid?.let {
-                firebaseDb.collection("data")
-                    .document(it)
-                    .collection("topics")
-                    .document(topic.id.toString())
-                    .delete()
-                    .addOnSuccessListener {
-                        topicDelete.remove(topic)
-                    }.await()
-            }
-        }
-    }
-
-    // network is available
-    private suspend fun syncDelete(
-        folder: Folder?, topic: Topic?
-    ) {
-        val refCollection = firebaseDb.collection("data")
-            .document(auth.currentUser?.uid.toString())
-            .collection("topic_folder_refs")
-
-        if (folder != null && topic != null) {
-            database.ApplicationDao().deleteTopicFolderCrossRef(
-                TopicFolderCrossRef(topic.id, folder.id)
-            )
-
-            refCollection.whereEqualTo("topicId", topic.id)
-                .whereEqualTo("folderId", folder.id)
-                .get().addOnSuccessListener { querySnapshot ->
-                    for (document in querySnapshot.documents) {
-                        document.reference.delete()
-                    }
-                }.await()
-            return
         }
 
-        if (folder != null) {
-            database.ApplicationDao().deleteFolder(folder)
-            database.ApplicationDao().deleteTopicFolderCrossRefByFolderId(folder.id)
-
-            auth.currentUser?.uid?.let {
-                firebaseDb.collection("data")
-                    .document(it)
-                    .collection("folders")
-                    .document(folder.id.toString())
-                    .delete()
-                    .await()
-            }
-
-            auth.currentUser?.uid?.let {
-                refCollection.whereEqualTo("folderId", folder.id)
-                    .get().addOnSuccessListener { querySnapshot ->
-                        for (document in querySnapshot.documents) {
-                            document.reference.delete()
-                        }
-                    }.await()
-            }
-            return
-        }
-
-        if (topic != null) {
-            database.ApplicationDao().deleteTopic(topic)
-            database.ApplicationDao().deleteTopicFolderCrossRefByTopicId(topic.id)
-
-            auth.currentUser?.uid?.let {
-                firebaseDb.collection("data")
-                    .document(it)
-                    .collection("topics")
-                    .document(topic.id.toString())
-                    .delete()
-                    .await()
-            }
-
-            auth.currentUser?.uid?.let {
-                refCollection.whereEqualTo("topicId", topic.id)
-                    .get().addOnSuccessListener { querySnapshot ->
-                        for (document in querySnapshot.documents) {
-                            document.reference.delete()
-                        }
-                    }.await()
-            }
-            return
-        }
+        setIsSyncDelete(true)
     }
 }
 

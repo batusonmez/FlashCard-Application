@@ -68,12 +68,14 @@ class MainActivity : AppCompatActivity(), NetworkListener{
     }
     @OptIn(DelicateCoroutinesApi::class)
     override fun onNetworkAvailable() {
+        val dataSyncHelper = DataSyncHelper(
+            firebaseDb = FirebaseFirestore.getInstance(),
+            auth = FirebaseAuth.getInstance(),
+            context = this
+        )
+        dataSyncHelper.setIsSync(false)
         GlobalScope.launch {
-            DataSyncHelper(
-                firebaseDb = FirebaseFirestore.getInstance(),
-                auth = FirebaseAuth.getInstance(),
-                context = this@MainActivity
-            ).syncData()
+            dataSyncHelper.syncData()
         }
     }
 

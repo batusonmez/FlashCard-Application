@@ -18,10 +18,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <ImageView
+                <de.hdodenhof.circleimageview.CircleImageView
                     android:id="@+id/iv_avatar"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
+                    android:layout_width="38dp"
+                    android:layout_height="38dp"
                     android:layout_marginStart="32dp"
                     android:layout_marginTop="32dp"
                     android:src="@drawable/baseline_person_24"
@@ -32,12 +32,12 @@
                     android:id="@+id/tv_hello_user"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="32dp"
+                    android:layout_marginStart="16dp"
                     android:layout_marginTop="40dp"
                     android:text="Hello, User!"
                     android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textStyle="italic"
                     app:layout_constraintStart_toEndOf="@+id/iv_avatar"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:ignore="HardcodedText" />
@@ -92,7 +92,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/hoc_phan"
                         android:textColor="@color/black"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_margin="12dp"
                         android:layout_weight="1"/>
@@ -102,7 +102,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/xem_tat_ca"
                         android:textColor="@color/button_color"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_margin="12dp"/>
                 </LinearLayout>
@@ -130,7 +130,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/thu_muc"
                         android:textColor="@color/black"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_margin="12dp"
                         android:layout_weight="1"/>
@@ -140,7 +140,7 @@
                         android:layout_height="wrap_content"
                         android:text="@string/xem_tat_ca"
                         android:textColor="@color/button_color"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textStyle="bold"
                         android:layout_margin="12dp"/>
                 </LinearLayout>

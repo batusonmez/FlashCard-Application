@@ -2,16 +2,17 @@ package com.example.flashcardapplication.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flashcardapplication.R
+import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.FragmentLibraryFolderBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.squareup.picasso.Picasso
 
 class LibraryFolderFragment : Fragment() {
@@ -23,19 +24,24 @@ class LibraryFolderFragment : Fragment() {
         val binding = FragmentLibraryFolderBinding.inflate(inflater, container, false)
 
         data = ArrayList()
-        // to test
-        data?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
-        data?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
+        val roomDb = context?.let { RoomDb.getDatabase(it) }
+        val folders = roomDb?.ApplicationDao()
+            ?.getAllFolders()
+            ?.filter { it.owner == FirebaseAuth.getInstance().currentUser?.email }
+        for (item in folders!!){
+            val folderWithTopics = roomDb.ApplicationDao()
+                .getFoldersWithTopics()
+                .filter { it.folder.id == item.id }
+
+            for (folder in folderWithTopics){
+                data?.add(Data().apply {
+                    name = folder.folder.name
+                    numberLesson = folder.topics.size
+                    avatar = FirebaseAuth.getInstance().currentUser?.photoUrl
+                    nameAuthor = FirebaseAuth.getInstance().currentUser?.displayName
+                })
+            }
+        }
 
         binding.rcvLibraryFolder.adapter = LibraryFolderAdapter(requireContext(), data!!)
         binding.rcvLibraryFolder.layoutManager =
