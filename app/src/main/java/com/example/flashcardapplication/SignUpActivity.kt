@@ -1,15 +1,18 @@
 package com.example.flashcardapplication
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 
+@Suppress("NAME_SHADOWING")
 class SignUpActivity : AppCompatActivity() {
     private var auth: FirebaseAuth? = null
     private var database: FirebaseFirestore? = null
@@ -60,8 +63,20 @@ class SignUpActivity : AppCompatActivity() {
             auth?.createUserWithEmailAndPassword(email, password)
                 ?.addOnCompleteListener(this) { task ->
                     if (task.isSuccessful) {
-                        // val user = auth?.currentUser
-                        val intent = android.content.Intent(this, MainActivity::class.java)
+                        val user = auth?.currentUser
+                        val storageRef = FirebaseStorage.getInstance().reference.child("avatar/images_1.png")
+
+                        storageRef.downloadUrl.addOnCompleteListener {task ->
+                            if (task.isSuccessful){
+                                val downloadUri = task.result
+                                user?.updateProfile(UserProfileChangeRequest.Builder()
+                                    .setDisplayName(user.email?.split("@")?.get(0))
+                                    .setPhotoUri(downloadUri)
+                                    .build())
+                            }
+                        }
+
+                        val intent = android.content.Intent(this, LoginActivity::class.java)
                         startActivity(intent)
                         finish()
                     } else {

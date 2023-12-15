@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flashcardapplication.R
+import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.FragmentHomePageBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -49,20 +50,29 @@ class HomePageFragment : Fragment() {
         binding.tvAllCourse.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         // redirect to all course in layout library
 
+        val database = context?.let { RoomDb.getDatabase(it) }
+        val topics = database?.ApplicationDao()
+            ?.getAllTopics()
+            ?.filter { it.owner == auth?.currentUser?.email }
+            ?.take(5)
         dataCourse = ArrayList()
-        // to test
-        dataCourse?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
-        dataCourse?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
+        if (topics != null) {
+            if (topics.isNotEmpty()) {
+                binding.llCourse.visibility = View.VISIBLE
+                for(item in topics) {
+                    val topicWithTerminologies = database.ApplicationDao().getTopicWithTerminologies(item.id)
+                    val data = Data().apply {
+                        name = item.name
+                        numberLesson = topicWithTerminologies.terminologies.size
+                        avatar = auth?.currentUser?.photoUrl
+                        nameAuthor = auth?.currentUser?.displayName
+                    }
+                    dataCourse?.add(data)
+                }
+            }else{
+                binding.llCourse.visibility = View.GONE
+            }
+        }
 
         dataCourse?.let {
             binding.rcvAllCourse.adapter = DataAdapter(context, it)
@@ -77,20 +87,27 @@ class HomePageFragment : Fragment() {
         // redirect to all folder in layout library
 
 
+        val folders = database?.ApplicationDao()
+            ?.getFoldersWithTopics()
+            ?.filter { it.folder.owner == auth?.currentUser?.email }
+            ?.take(5)
         dataFolder = ArrayList()
-        // to test
-        dataFolder?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
-        dataFolder?.add(Data().apply {
-            name = "Lập trình Android"
-            numberLesson = 10
-            avatar = Uri.parse("android.resource://com.example.flashcardapplication/drawable/avatar")
-            nameAuthor = "Nguyễn Văn A"
-        })
+        if (folders != null) {
+            if (folders.isNotEmpty()) {
+                binding.llFolder.visibility = View.VISIBLE
+                for (item in folders) {
+                    val data = Data().apply {
+                        name = item.folder.name
+                        numberLesson = item.topics.size
+                        avatar = auth?.currentUser?.photoUrl
+                        nameAuthor = auth?.currentUser?.displayName
+                    }
+                    dataFolder?.add(data)
+                }
+            }else{
+                binding.llFolder.visibility = View.GONE
+            }
+        }
 
         dataFolder?.let {
             binding.rcvAllFolder.adapter = DataAdapter(context, it)

@@ -20,10 +20,12 @@
                 android:textColor="@color/black"
                 android:layout_weight="1"
                 android:layout_gravity="center_vertical"/>
+
             <Button
                 android:layout_width="50dp"
                 android:layout_height="50dp"
-                android:background="@drawable/background_button_add"/>
+                android:background="@drawable/background_button_add"
+                tools:ignore="SpeakableTextPresentCheck" />
         </LinearLayout>
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
@@ -32,12 +34,16 @@
             app:tabSelectedTextColor="@color/dark_blue"
             android:layout_margin="8dp"
             android:layout_below="@id/ll_header"/>
+
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@+id/tab_layout"
-            android:layout_margin="8dp"
-            tools:ignore="ObsoleteLayoutParam" />
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            tools:ignore="ObsoleteLayoutParam,SpeakableTextPresentCheck" />
     </RelativeLayout>
 </layout>
