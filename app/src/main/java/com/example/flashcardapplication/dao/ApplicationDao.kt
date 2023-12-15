@@ -90,8 +90,8 @@ interface ApplicationDao {
     fun getFoldersByOwner(owner: String): List<Folder>
 
     @Transaction
-    @Insert
-    fun insertFolder(folder: Folder)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertFolder(folder: Folder) : Long
 
     @Transaction
     @Update
@@ -110,7 +110,7 @@ interface ApplicationDao {
     fun getAllTopicFolderCrossRef(): List<TopicFolderCrossRef>
 
     @Transaction
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertTopicFolderCrossRef(crossRef: TopicFolderCrossRef)
 
     @Transaction

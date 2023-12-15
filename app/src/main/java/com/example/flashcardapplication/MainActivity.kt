@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,9 +20,12 @@ import androidx.fragment.app.FragmentPagerAdapter
 import com.example.flashcardapplication.database.DataSyncHelper
 import com.example.flashcardapplication.database.NetworkListener
 import com.example.flashcardapplication.database.NetworkReceiver
+import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.ActivityMainBinding
+import com.example.flashcardapplication.databinding.CustomViewDialogBinding
 import com.example.flashcardapplication.fragments.HomePageFragment
 import com.example.flashcardapplication.fragments.LibraryFragment
+import com.example.flashcardapplication.models.Folder
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -118,11 +122,13 @@ class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager)
 class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
     private var tvCourse: TextView? = null
     private var tvFolder: TextView? = null
+    private var binding: CustomViewDialogBinding? = null
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        binding = CustomViewDialogBinding.inflate(inflater, container, false)
         val view = inflater.inflate(R.layout.bottom_sheet_dialog, container, false)
 
         tvCourse = view.findViewById(R.id.tv_course)
@@ -137,9 +143,22 @@ class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
         tvFolder?.setOnClickListener {
             val dialog = AlertDialog.Builder(it.context)
                 .setTitle("Tạo thư mục")
-                .setView(R.layout.custom_view_dialog)
-                .setPositiveButton("Ok") { dialog, _ ->
-                    dialog.dismiss()
+                .setView(binding?.root)
+                .setPositiveButton("Ok") { _, _ ->
+                    val name = binding!!.edtName.text.toString()
+                    val description = binding?.edtDescription?.text.toString()
+                    val roomDb = context?.let { it1 -> RoomDb.getDatabase(it1) }
+                    val folder = Folder(0, name, description, "public",
+                        FirebaseAuth.getInstance().currentUser?.email.toString())
+                    val folderId = roomDb?.ApplicationDao()?.insertFolder(folder)?.toInt()
+                    DataSyncHelper(
+                        firebaseDb = FirebaseFirestore.getInstance(),
+                        auth = FirebaseAuth.getInstance(),
+                        context = requireContext()
+                    ).setIsSync(false)
+                    val intent = Intent(activity, FolderActivity::class.java)
+                    intent.putExtra("folderId", folderId)
+                    startActivity(intent)
                 }
                 .setNegativeButton("Hủy") { dialog, _ ->
                     dialog.dismiss()

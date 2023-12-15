@@ -8,7 +8,7 @@
         android:layout_height="wrap_content">
 
         <EditText
-            android:id="@+id/edt_terminology"
+            android:id="@+id/edt_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
@@ -22,7 +22,7 @@
             tools:ignore="Autofill,HardcodedText,LabelFor,SpeakableTextPresentCheck,VisualLintTextFieldSize" />
 
         <EditText
-            android:id="@+id/edt_definition"
+            android:id="@+id/edt_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
