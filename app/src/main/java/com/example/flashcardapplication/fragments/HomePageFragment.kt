@@ -2,6 +2,9 @@ package com.example.flashcardapplication.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,7 +13,11 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import com.example.flashcardapplication.FolderActivity
 import com.example.flashcardapplication.R
+import com.example.flashcardapplication.database.DataSyncHelper
+import com.example.flashcardapplication.database.NetworkListener
+import com.example.flashcardapplication.database.NetworkReceiver
 import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.FragmentHomePageBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -19,15 +26,29 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import de.hdodenhof.circleimageview.CircleImageView
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.Serializable
 
-class HomePageFragment : Fragment() {
+@Suppress("DEPRECATION")
+class HomePageFragment : Fragment(), NetworkListener {
     private var auth : FirebaseAuth? = null
     private var database : FirebaseFirestore? = null
+    private lateinit var dataSyncHelper: DataSyncHelper
+    private val networkReceiver = NetworkReceiver(listener = this)
 
     private var dataCourse: ArrayList<Data>? = null
     private var dataFolder: ArrayList<Data>? = null
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        dataSyncHelper = DataSyncHelper(
+            firebaseDb = FirebaseFirestore.getInstance(),
+            auth = FirebaseAuth.getInstance(),
+            context = context
+        )
+    }
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -76,10 +97,12 @@ class HomePageFragment : Fragment() {
                 for(item in topics) {
                     val topicWithTerminologies = roomDb.ApplicationDao().getTopicWithTerminologies(item.id)
                     val data = Data().apply {
+                        id = item.id
                         name = item.name
                         numberLesson = topicWithTerminologies.terminologies.size
                         avatar = auth?.currentUser?.photoUrl
                         nameAuthor = auth?.currentUser?.displayName
+                        type = "topic"
                     }
                     dataCourse?.add(data)
                 }
@@ -111,10 +134,12 @@ class HomePageFragment : Fragment() {
                 binding.llFolder.visibility = View.VISIBLE
                 for (item in folders) {
                     val data = Data().apply {
+                        id = item.folder.id
                         name = item.folder.name
                         numberLesson = item.topics.size
                         avatar = auth?.currentUser?.photoUrl
                         nameAuthor = auth?.currentUser?.displayName
+                        type = "folder"
                     }
                     dataFolder?.add(data)
                 }
@@ -134,16 +159,42 @@ class HomePageFragment : Fragment() {
 
         return view
     }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun onNetworkAvailable() {
+        GlobalScope.launch {
+            if (!dataSyncHelper.getIsSyncDelete()) {
+                dataSyncHelper.serverDelete()
+            }
+            dataSyncHelper.syncData()
+        }
+    }
+
+    override fun onNetworkUnavailable() {
+        // nothing
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val intentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+        requireActivity().registerReceiver(networkReceiver, intentFilter)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        requireActivity().unregisterReceiver(networkReceiver)
+    }
 }
 
 class Data : Serializable {
+    var id : Int? = null
     var name: String? = null
     var numberLesson: Int? = null
     var avatar: Uri? = null
     var nameAuthor: String? = null
-
+    var type: String? = null
     override fun toString(): String {
-        return "Data(name=$name, numberLesson=$numberLesson, avatar=$avatar, nameAuthor=$nameAuthor)"
+        return "Data(id=$id, name=$name, numberLesson=$numberLesson, avatar=$avatar, nameAuthor=$nameAuthor, type=$type)"
     }
 }
 
@@ -152,6 +203,7 @@ class DataAdapter(
     private val data: ArrayList<Data>) :
     RecyclerView.Adapter<DataAdapter.DataViewHolder>() {
     class DataViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val llItemCourse : View? = itemView.findViewById(R.id.ll_itemCourse)
         val tvNameCourse : TextView? = itemView.findViewById(R.id.tv_nameCourse)
         val tvNumberLesson : TextView? = itemView.findViewById(R.id.tv_numberLesson)
         val civAvatar : CircleImageView? = itemView.findViewById(R.id.civ_avatar)
@@ -170,6 +222,18 @@ class DataAdapter(
         holder.tvNumberLesson?.text = item.numberLesson.toString() + " thuật ngữ"
         Picasso.get().load(item.avatar).into(holder.civAvatar)
         holder.tvNameAuthor?.text = item.nameAuthor
+
+        if(item.type == "topic") {
+            holder.llItemCourse?.setOnClickListener {
+                // handle later
+            }
+        }else{
+            holder.llItemCourse?.setOnClickListener {
+                val intent = Intent(context, FolderActivity::class.java)
+                intent.putExtra("folderId", item.id)
+                context?.startActivity(intent)
+            }
+        }
     }
 
     override fun getItemCount(): Int {

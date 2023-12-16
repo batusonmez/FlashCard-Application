@@ -10,8 +10,8 @@ import androidx.room.Relation
 data class Folder(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
-    val name: String,
-    val description: String,
+    var name: String,
+    var description: String,
     val status: String,
     val owner: String
 ){

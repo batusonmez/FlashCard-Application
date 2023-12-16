@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/i_add_folder"
+        android:icon="@drawable/background_button_add"
+        android:title="Add"
+        tools:ignore="HardcodedText"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/i_modify_folder"
+        android:icon="@drawable/baseline_create_24"
+        android:title="Modify"
+        tools:ignore="HardcodedText"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/i_delete_folder"
+        android:icon="@drawable/baseline_delete_24"
+        android:title="Delete"
+        tools:ignore="HardcodedText"
+        app:showAsAction="ifRoom" />
+</menu>

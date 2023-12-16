@@ -17,7 +17,6 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -32,7 +31,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.coroutineScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flashcardapplication.database.DataSyncHelper
@@ -50,7 +48,9 @@ import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -63,12 +63,13 @@ import kotlin.math.min
 class CreateLessonActivity : AppCompatActivity(), NetworkListener {
     private lateinit var binding: ActivityCreateLessonBinding
     private var data: ArrayList<Term>? = null
-    private var fullData = ArrayList<Term>()
-    private var isLoading = false
-    private var currentPage = 1
-    private var totalPage = 1
-    private val lifecycleCoroutineScope = lifecycle.coroutineScope
     private val networkReceiver = NetworkReceiver(listener = this)
+    private val dataSyncHelper = DataSyncHelper(
+        firebaseDb = FirebaseFirestore.getInstance(),
+        auth = FirebaseAuth.getInstance(),
+        context = this
+    )
+
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,7 +91,7 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
 
         // default to add 3 terminology
         data = ArrayList()
-        for(i in 0..2) {
+        for (i in 0..2) {
             data?.add(Term().apply {
                 terminology = ""
                 definition = ""
@@ -99,36 +100,8 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
         data?.let {
             binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it, supportActionBar!!)
         }
-        binding.rcvCreateLesson.setHasFixedSize(true)
         val layoutManager = LinearLayoutManager(this)
         binding.rcvCreateLesson.layoutManager = layoutManager
-        binding.rcvCreateLesson.addOnScrollListener(object :
-            PaginationScrollListener(layoutManager) {
-            override fun isLastPage(): Boolean {
-                return currentPage == totalPage
-            }
-            override fun isLoading(): Boolean {
-                return isLoading
-            }
-            override fun loadMoreItems() {
-                isLoading = true
-                currentPage += 1
-                if (currentPage <= totalPage) {
-                    val start = (currentPage - 1) * 3
-                    val end = min(start + 2, fullData.size - 1)
-                    for (item in start..end) {
-                        data?.add(fullData[item])
-                    }
-                    isLoading = false
-                    binding.rcvCreateLesson.post {
-                        runOnUiThread {
-                            binding.rcvCreateLesson.adapter?.notifyItemRangeInserted(start, end)
-                            binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(start, end)
-                        }
-                    }
-                }
-            }
-        })
 
         binding.btnCreateLesson.setOnClickListener {
             data?.add(Term().apply {
@@ -144,6 +117,7 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
             binding.llDescription.visibility = View.GONE
         }
     }
+
     override fun onStart() {
         super.onStart()
         val intentFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
@@ -159,10 +133,10 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
     private var filePicker =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let{ uri ->
-                    if(isCSVFile(uri))
+                result.data?.data?.let { uri ->
+                    if (isCSVFile(uri))
                         readCSVFile(uri)
-                    else{
+                    else {
                         AlertDialog.Builder(this)
                             .setTitle("Lỗi")
                             .setMessage("File không đúng định dạng")
@@ -172,6 +146,7 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
                 }
             }
         }
+
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             type = "*/*"
@@ -179,15 +154,16 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
         }
         filePicker.launch(intent)
     }
+
     private fun isCSVFile(uri: Uri): Boolean {
         return DocumentsContract.getDocumentId(uri).endsWith(".csv")
     }
+
     @SuppressLint("Recycle", "NotifyDataSetChanged")
     private fun readCSVFile(uri: Uri) {
         val inputStream = contentResolver.openInputStream(uri)
         val bufferedReader = inputStream?.bufferedReader()
         data?.clear()
-        fullData.clear()
 
         val topic = bufferedReader?.readLine()
         binding.edtTopic.setText(topic)
@@ -195,18 +171,12 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
         bufferedReader?.readLine()
         bufferedReader?.forEachLine {
             val line = it.split(",")
-            fullData.add(Term().apply {
+            data?.add(Term().apply {
                 terminology = line[0]
                 definition = line[1]
             })
         }
         bufferedReader?.close()
-        currentPage = 1
-        totalPage = fullData.size / 3 + 1
-        // first data
-        for (item in 0..min(fullData.size - 1, 2)) {
-            data?.add(fullData[item])
-        }
         binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, data!!, supportActionBar!!)
         binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(0, data!!.size)
     }
@@ -218,13 +188,15 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId) {
+        when (item.itemId) {
             R.id.i_save -> {
+                val adapter = binding.rcvCreateLesson.adapter as CreateLessonAdapter
+                val fullData = adapter.getTerminologyData()
                 val database = RoomDb.getDatabase(this)
                 val name: String = binding.edtTopic.text.toString().ifEmpty { "Nháp" }
                 val description: String = binding.edtDescription.text.toString().ifEmpty { "" }
-                val data = (binding.rcvCreateLesson.adapter as CreateLessonAdapter).getTerminologyData()
-                val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                val timestamp =
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 val status = "public"
                 val owner = FirebaseAuth.getInstance().currentUser?.email.toString()
                 val topic = Topic(0, name, description, timestamp, status, owner)
@@ -234,32 +206,33 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
                     val dataTerm = ArrayList<Terminology>()
                     for (item in fullData) {
                         dataTerm.add(Terminology(0, item.terminology!!, item.definition!!, id))
-                        Log.e("TAG", "onOptionsItemSelected: " + item.terminology + " " + item.definition + " " + id)
                     }
-
                     if (dataTerm.isNotEmpty()) {
                         database.ApplicationDao().insertAllTerminologies(dataTerm)
                     }
                 }
 
-            }
-            android.R.id.home -> {
+                dataSyncHelper.setIsSync(false)
+
+                val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("viewPager", 2)
+                startActivity(intent)
                 finish()
             }
-            R.id.i_setting -> {
-                // handle to setting
+
+            android.R.id.home -> {
+                finish()
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onNetworkAvailable() {
-        lifecycleCoroutineScope.launchWhenStarted {
-            DataSyncHelper(
-                firebaseDb = FirebaseFirestore.getInstance(),
-                auth = FirebaseAuth.getInstance(),
-                context = this@CreateLessonActivity
-            ).syncData()
+        GlobalScope.launch {
+            if (!dataSyncHelper.getIsSyncDelete())
+                dataSyncHelper.serverDelete()
+            dataSyncHelper.syncData()
         }
     }
 
@@ -276,7 +249,7 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
 class Term(
     var terminology: String? = null,
     var definition: String? = null
-): Serializable {
+) : Serializable {
     override fun toString(): String {
         return "Terminology(terminology=$terminology, definition=$definition)"
     }
@@ -285,13 +258,16 @@ class Term(
 class CreateLessonAdapter(
     private val context: Context,
     private val data: ArrayList<Term>,
-    private val supportActionBar: androidx.appcompat.app.ActionBar) :
+    private val supportActionBar: androidx.appcompat.app.ActionBar
+) :
     RecyclerView.Adapter<CreateLessonAdapter.ViewHolder>() {
     private var translatorToVN = false
     private var translator: Translator? = null
     private var textToSpeech: TextToSpeech? = null
     private val vocabularies = readVocabularyFromRawFile(R.raw.words_alpha, context)
-    private val adapter = LimitedArrayAdapter(context, android.R.layout.simple_list_item_1, vocabularies)
+    private val adapter =
+        LimitedArrayAdapter(context, android.R.layout.simple_list_item_1, vocabularies)
+
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvNumber: TextView? = view.findViewById(R.id.tv_number)
         val btnVolume: Button? = view.findViewById(R.id.btn_volume)
@@ -300,6 +276,7 @@ class CreateLessonAdapter(
         val mactvTerminology: MultiAutoCompleteTextView? = view.findViewById(R.id.mactv_terminology)
         val edtDefinition: EditText? = view.findViewById(R.id.edt_definition)
     }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.item_create_lesson, parent, false)
         downloadModel()
@@ -316,6 +293,19 @@ class CreateLessonAdapter(
         holder.mactvTerminology?.setTokenizer(SpaceTokenizer())
         holder.mactvTerminology?.setAdapter(adapter)
 
+        holder.mactvTerminology?.setOnItemClickListener { _, _, _, _ ->
+            CoroutineScope(Dispatchers.Main).launch {
+                if (translatorToVN) {
+                    val translatedText = withContext(Dispatchers.IO) {
+                        translator?.translate(holder.mactvTerminology.text.toString())?.await()
+                    }
+                    item.definition = translatedText
+                    holder.edtDefinition?.setText(translatedText)
+                }
+                item.terminology = holder.mactvTerminology.text.toString()
+            }
+        }
+
         holder.mactvTerminology?.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -326,24 +316,28 @@ class CreateLessonAdapter(
                         item.definition = translatedText
                         holder.edtDefinition?.setText(translatedText)
                     }
-                    item.terminology = s.toString()
                 }
             }
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // do nothing
             }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 // do nothing
             }
         })
 
+
         holder.edtDefinition?.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 item.definition = s.toString()
             }
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // do nothing
             }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 // do nothing
             }
@@ -361,7 +355,7 @@ class CreateLessonAdapter(
         }
 
         holder.btnDelete?.setOnClickListener {
-            if(data.size > 2){
+            if (data.size > 2) {
                 data.removeAt(position)
                 notifyItemRemoved(position)
                 notifyItemRangeChanged(position, data.size)
@@ -400,13 +394,15 @@ class CreateLessonAdapter(
         }
         return vocabularies
     }
+
     fun getTerminologyData(): ArrayList<Term> {
         return data.filter {
-            it.terminology?.isNotEmpty() == true && it.definition?.isNotEmpty() == true }
+            it.terminology?.isNotEmpty() == true && it.definition?.isNotEmpty() == true
+        }
                 as ArrayList<Term>
     }
 
-    private fun downloadModel(){
+    private fun downloadModel() {
         translator = TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)
             .setTargetLanguage(TranslateLanguage.VIETNAMESE)
@@ -445,6 +441,7 @@ class SpaceTokenizer : MultiAutoCompleteTextView.Tokenizer {
         }
         return i
     }
+
     override fun findTokenEnd(text: CharSequence, cursor: Int): Int {
         var i = cursor
         val len = text.length
@@ -457,6 +454,7 @@ class SpaceTokenizer : MultiAutoCompleteTextView.Tokenizer {
         }
         return len
     }
+
     override fun terminateToken(text: CharSequence): CharSequence {
         var i = text.length
         while (i > 0 && text[i - 1] == ' ') {
@@ -474,25 +472,6 @@ class SpaceTokenizer : MultiAutoCompleteTextView.Tokenizer {
                 sp
             } else {
                 "$text "
-            }
-        }
-    }
-}
-
-abstract class PaginationScrollListener(
-    private val layoutManager: LinearLayoutManager) :
-    RecyclerView.OnScrollListener() {
-    abstract fun isLastPage(): Boolean
-    abstract fun isLoading(): Boolean
-    abstract fun loadMoreItems()
-    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-        if (dy < 0) return
-        val visibleItemCount = layoutManager.childCount
-        val totalItemCount = layoutManager.itemCount
-        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
-        if (!isLoading() && !isLastPage()) {
-            if (visibleItemCount + firstVisibleItemPosition >= totalItemCount && firstVisibleItemPosition >= 0) {
-                loadMoreItems()
             }
         }
     }

@@ -45,6 +45,9 @@ class MainActivity : AppCompatActivity(), NetworkListener{
         adapter.addFragment(HomePageFragment(), "Lời giải") // change this
         adapter.addFragment(LibraryFragment(), "Thư viện")
 
+        if(intent.hasExtra("viewPager")){
+            binding.viewPager.currentItem = intent.getIntExtra("viewPager", 0)
+        }
 
         binding.viewPager.adapter = adapter
 
@@ -77,6 +80,11 @@ class MainActivity : AppCompatActivity(), NetworkListener{
             auth = FirebaseAuth.getInstance(),
             context = this
         )
+        if(!dataSyncHelper.getIsSyncDelete()){
+            GlobalScope.launch {
+                dataSyncHelper.serverDelete()
+            }
+        }
         dataSyncHelper.setIsSync(false)
         GlobalScope.launch {
             dataSyncHelper.syncData()
@@ -141,24 +149,32 @@ class CustomBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
         tvFolder?.movementMethod = android.text.method.LinkMovementMethod.getInstance()
         tvFolder?.setOnClickListener {
+            val parent = binding?.root?.parent as? ViewGroup
+            parent?.removeView(binding?.root)
+
             val dialog = AlertDialog.Builder(it.context)
                 .setTitle("Tạo thư mục")
-                .setView(binding?.root)
+                .setView(binding?.root?.rootView)
                 .setPositiveButton("Ok") { _, _ ->
                     val name = binding!!.edtName.text.toString()
                     val description = binding?.edtDescription?.text.toString()
-                    val roomDb = context?.let { it1 -> RoomDb.getDatabase(it1) }
-                    val folder = Folder(0, name, description, "public",
-                        FirebaseAuth.getInstance().currentUser?.email.toString())
-                    val folderId = roomDb?.ApplicationDao()?.insertFolder(folder)?.toInt()
-                    DataSyncHelper(
-                        firebaseDb = FirebaseFirestore.getInstance(),
-                        auth = FirebaseAuth.getInstance(),
-                        context = requireContext()
-                    ).setIsSync(false)
-                    val intent = Intent(activity, FolderActivity::class.java)
-                    intent.putExtra("folderId", folderId)
-                    startActivity(intent)
+                    if(name.isEmpty()){
+                        binding!!.edtName.error = "Tên thư mục không được để trống"
+                        return@setPositiveButton
+                    }else{
+                        val roomDb = context?.let { it1 -> RoomDb.getDatabase(it1) }
+                        val folder = Folder(0, name, description, "public",
+                            FirebaseAuth.getInstance().currentUser?.email.toString())
+                        val folderId = roomDb?.ApplicationDao()?.insertFolder(folder)?.toInt()
+                        DataSyncHelper(
+                            firebaseDb = FirebaseFirestore.getInstance(),
+                            auth = FirebaseAuth.getInstance(),
+                            context = requireContext()
+                        ).setIsSync(false)
+                        val intent = Intent(activity, FolderActivity::class.java)
+                        intent.putExtra("folderId", folderId)
+                        startActivity(intent)
+                    }
                 }
                 .setNegativeButton("Hủy") { dialog, _ ->
                     dialog.dismiss()
