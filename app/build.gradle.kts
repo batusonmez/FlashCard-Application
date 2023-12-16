@@ -65,4 +65,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
     implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation("com.wajahatkarim:EasyFlipView:3.0.3")
+    implementation("com.yuyakaido.android:card-stack-view:2.3.4")
 }

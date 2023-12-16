@@ -3,6 +3,8 @@ package com.example.flashcardapplication
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
@@ -42,6 +44,7 @@ import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import java.util.Locale
 
+@Suppress("DEPRECATION")
 class StudyActivity : AppCompatActivity(), NetworkListener {
     private val networkReceiver = NetworkReceiver(listener = this)
     private val dataSyncHelper = DataSyncHelper(
@@ -77,6 +80,11 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
 
         binding.tvFlashcard.movementMethod = LinkMovementMethod.getInstance()
         // handle with tvFlashcard
+        binding.tvFlashcard.setOnClickListener {
+            val intent = Intent(this, FlashCardActivity::class.java)
+            intent.putExtra("topicId", topicId)
+            startActivity(intent)
+        }
 
         binding.tvQuiz.movementMethod = LinkMovementMethod.getInstance()
         // handle with tvQuiz
@@ -187,12 +195,14 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
 }
 
 class FlashCardAdapter(
-    private val context: StudyActivity,
+    private val context: Context,
     private val data: List<Terminology>
 ) : RecyclerView.Adapter<FlashCardAdapter.ViewHolder>() {
+    private var textToSpeech: TextToSpeech? = null
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvFront = itemView.findViewById<TextView>(R.id.tv_front)!!
         val tvBack = itemView.findViewById<TextView>(R.id.tv_back)!!
+        val btnVolume = itemView.findViewById<TextView>(R.id.btn_volume)!!
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -204,6 +214,16 @@ class FlashCardAdapter(
         val item = data[position]
         holder.tvFront.text = item.terminology
         holder.tvBack.text = item.definition
+
+        holder.btnVolume.setOnClickListener {
+            textToSpeech = TextToSpeech(context) { status ->
+                if (status != TextToSpeech.ERROR) {
+                    textToSpeech?.language = Locale.US
+                    textToSpeech?.setSpeechRate(0.8f)
+                    textToSpeech?.speak(item.terminology, TextToSpeech.QUEUE_ADD, null, null)
+                }
+            }
+        }
     }
 
     override fun getItemCount(): Int {
