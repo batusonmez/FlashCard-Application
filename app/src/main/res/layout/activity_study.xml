@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#f2f2f2"
+            android:orientation="vertical"
+            tools:context=".StudyActivity">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_easy_flip_view"
+                android:layout_width="match_parent"
+                android:layout_height="250dp"
+                android:layout_margin="16dp">
+            </androidx.recyclerview.widget.RecyclerView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tv_topic_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="Học phần"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:layout_weight="1"
+                    tools:ignore="HardcodedText" />
+                <Button
+                    android:id="@+id/btn_download"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/background_download"
+                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/civ_avatar"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="8dp"
+                    android:src="@drawable/avatar"
+                    tools:ignore="ImageContrastCheck" />
+                <TextView
+                    android:id="@+id/tv_author_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="nguyntrungkin091"
+                    android:layout_marginEnd="8dp"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_vertical"
+                    tools:ignore="HardcodedText" />
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="20dp"
+                    android:background="@color/gray"
+                    android:layout_marginEnd="8dp"
+                    android:layout_gravity="center_vertical"/>
+                <TextView
+                    android:id="@+id/tv_number_lesson"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10 thuật ngữ"
+                    android:textStyle="bold"
+                    android:layout_gravity="center_vertical"
+                    tools:ignore="HardcodedText" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_flashcard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:drawableStart="@drawable/book_solid"
+                android:padding="16dp"
+                android:drawablePadding="12dp"
+                android:text="Thẻ ghi nhớ"
+                tools:ignore="HardcodedText,UseCompatTextViewDrawableXml" />
+            <TextView
+                android:id="@+id/tv_quiz"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:drawableStart="@drawable/list_check_solid"
+                android:padding="16dp"
+                android:drawablePadding="12dp"
+                android:text="Nhiều lựa chọn"
+                tools:ignore="HardcodedText,UseCompatTextViewDrawableXml" />
+            <TextView
+                android:id="@+id/tv_typing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:drawableStart="@drawable/pen_to_square_solid"
+                android:padding="16dp"
+                android:drawablePadding="12dp"
+                android:text="Gõ từ"
+                tools:ignore="HardcodedText,UseCompatTextViewDrawableXml" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="8dp"
+                android:drawablePadding="12dp"
+                android:text="Thẻ"
+                tools:ignore="HardcodedText,UseCompatTextViewDrawableXml" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcv_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"/>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>

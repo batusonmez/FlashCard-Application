@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.example.flashcardapplication.FolderActivity
 import com.example.flashcardapplication.R
+import com.example.flashcardapplication.StudyActivity
 import com.example.flashcardapplication.database.DataSyncHelper
 import com.example.flashcardapplication.database.NetworkListener
 import com.example.flashcardapplication.database.NetworkReceiver
@@ -225,7 +226,9 @@ class DataAdapter(
 
         if(item.type == "topic") {
             holder.llItemCourse?.setOnClickListener {
-                // handle later
+                val intent = Intent(context, StudyActivity::class.java)
+                intent.putExtra("topicId", item.id)
+                context?.startActivity(intent)
             }
         }else{
             holder.llItemCourse?.setOnClickListener {

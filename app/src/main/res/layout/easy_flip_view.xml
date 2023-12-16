@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.wajahatkarim3.easyflipview.EasyFlipView
+        android:id="@+id/fv_preview"
+        android:layout_centerInParent="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp"
+        android:background="@drawable/background_white"
+        app:flipOnTouch="true"
+        app:flipDuration="500"
+        app:flipEnabled="true"
+        app:flipType="vertical"
+        tools:ignore="ObsoleteLayoutParam">
+        <TextView
+            android:id="@+id/tv_back"
+            android:gravity="center"
+            android:text="Back Preview"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/gray_white_2"
+            tools:ignore="HardcodedText,SpUsage" />
+        <TextView
+            android:id="@+id/tv_front"
+            android:gravity="center"
+            android:text="Font Preview"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:ignore="HardcodedText" />
+    </com.wajahatkarim3.easyflipview.EasyFlipView>
+</LinearLayout>
