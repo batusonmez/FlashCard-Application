@@ -97,6 +97,12 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
 
         binding.tvTyping.movementMethod = LinkMovementMethod.getInstance()
         // handle with tvTyping
+        binding.tvTyping.setOnClickListener {
+            val intent = Intent(this, TypingActivity::class.java)
+            intent.putExtra("topicId", topicId)
+            intent.putExtra("position", if(topic.terminologies.isNotEmpty()) 0 else -1)
+            startActivity(intent)
+        }
 
         // rcvCard
         binding.rcvCard.adapter = CardAdapter(this, topic.terminologies)

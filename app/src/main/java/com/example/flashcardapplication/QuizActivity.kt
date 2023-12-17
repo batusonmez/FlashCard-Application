@@ -43,7 +43,7 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
 
         val topicId = intent.getIntExtra("topicId", 0)
         val position = intent.getIntExtra("position", 1)
-        if(position != -1){
+        if (position != -1) {
             val topic = roomDb.ApplicationDao()
                 .getTopicWithTerminologies(topicId)
             binding.tvTerminology.text = topic.terminologies[position].terminology
@@ -58,7 +58,12 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
                 if (status != TextToSpeech.ERROR) {
                     textToSpeech?.language = Locale.US
                     textToSpeech?.setSpeechRate(0.8f)
-                    textToSpeech?.speak(correctAnswer.terminology, TextToSpeech.QUEUE_ADD, null, null)
+                    textToSpeech?.speak(
+                        correctAnswer.terminology,
+                        TextToSpeech.QUEUE_ADD,
+                        null,
+                        null
+                    )
                 }
             }
 
@@ -66,30 +71,33 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
                 .getTopicWithTerminologies(topicId)
                 .terminologies as ArrayList<Terminology>
             listShuffle.remove(correctAnswer)
-            while(listShuffle.size < 3){
+            while (listShuffle.size < 3) {
                 listShuffle.addAll(topic.terminologies)
             }
             listShuffle.shuffle()
 
-            when((1..4).random()){
+            when ((1..4).random()) {
                 1 -> {
                     binding.tvMeaning1.text = correctAnswer.definition
                     binding.tvMeaning2.text = listShuffle[0].definition
                     binding.tvMeaning3.text = listShuffle[1].definition
                     binding.tvMeaning4.text = listShuffle[2].definition
                 }
+
                 2 -> {
                     binding.tvMeaning1.text = listShuffle[0].definition
                     binding.tvMeaning2.text = correctAnswer.definition
                     binding.tvMeaning3.text = listShuffle[1].definition
                     binding.tvMeaning4.text = listShuffle[2].definition
                 }
+
                 3 -> {
                     binding.tvMeaning1.text = listShuffle[0].definition
                     binding.tvMeaning2.text = listShuffle[1].definition
                     binding.tvMeaning3.text = correctAnswer.definition
                     binding.tvMeaning4.text = listShuffle[2].definition
                 }
+
                 4 -> {
                     binding.tvMeaning1.text = listShuffle[0].definition
                     binding.tvMeaning2.text = listShuffle[1].definition
@@ -99,67 +107,95 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
             }
 
             binding.tvMeaning1.setOnClickListener {
-                checkAnswerAndHover(binding.tvMeaning1, correctAnswer.definition, topic.terminologies as ArrayList, position, topicId)
+                checkAnswerAndHover(
+                    binding.tvMeaning1,
+                    correctAnswer.definition,
+                    topic.terminologies as ArrayList,
+                    position,
+                    topicId
+                )
             }
             binding.tvMeaning2.setOnClickListener {
-                checkAnswerAndHover(binding.tvMeaning2, correctAnswer.definition, topic.terminologies as ArrayList, position, topicId)
+                checkAnswerAndHover(
+                    binding.tvMeaning2,
+                    correctAnswer.definition,
+                    topic.terminologies as ArrayList,
+                    position,
+                    topicId
+                )
             }
             binding.tvMeaning3.setOnClickListener {
-                checkAnswerAndHover(binding.tvMeaning3, correctAnswer.definition, topic.terminologies as ArrayList, position, topicId)
+                checkAnswerAndHover(
+                    binding.tvMeaning3,
+                    correctAnswer.definition,
+                    topic.terminologies as ArrayList,
+                    position,
+                    topicId
+                )
             }
             binding.tvMeaning4.setOnClickListener {
-                checkAnswerAndHover(binding.tvMeaning4, correctAnswer.definition, topic.terminologies as ArrayList, position, topicId)
+                checkAnswerAndHover(
+                    binding.tvMeaning4,
+                    correctAnswer.definition,
+                    topic.terminologies as ArrayList,
+                    position,
+                    topicId
+                )
             }
         }
     }
+
     @SuppressLint("UseCompatLoadingForDrawables")
-    private fun checkAnswerAndHover(textview: TextView, correctAnswer: String,
-                                    terminology: ArrayList<Terminology>, position: Int,
-                                    topicId: Int){
+    private fun checkAnswerAndHover(
+        textview: TextView, correctAnswer: String,
+        terminology: ArrayList<Terminology>, position: Int,
+        topicId: Int
+    ) {
         textview.background = getDrawable(R.drawable.background_quiz_hover)
         val isTrue: Boolean = checkAnswer(textview.text.toString(), correctAnswer)
 
-        if(position + 1 > terminology.size -1){
+        if (isTrue) {
             val dialog = AlertDialog.Builder(this)
-                .setTitle("Chúc mừng")
-                .setMessage("Bạn đã hoàn thành bài kiểm tra")
+                .setView(R.layout.dialog_true)
                 .setPositiveButton("Ok") { _, _ ->
+                    val intent = Intent(this, QuizActivity::class.java)
+                    intent.putExtra("topicId", topicId)
+                    intent.putExtra("position", min(position + 1, terminology.size - 1))
+                    startActivity(intent)
                     finish()
                 }.create()
             dialog.show()
-        }else{
-            if(isTrue){
-                val dialog = AlertDialog.Builder(this)
-                    .setView(R.layout.dialog_true)
-                    .setPositiveButton("Ok") { _, _ ->
+        } else {
+            val bindingDialog = DialogFalseBinding.inflate(layoutInflater)
+            bindingDialog.tvMeaning.text = terminology[position].terminology
+            bindingDialog.tvAnswer.text = correctAnswer
+            bindingDialog.tvYourAnswer.text = textview.text.toString()
+
+            val dialog = AlertDialog.Builder(this)
+                .setView(bindingDialog.root)
+                .setPositiveButton("Ok") { _, _ ->
+                    if (position + 1 > terminology.size - 1) {
+                        val dialogComplete = AlertDialog.Builder(this)
+                            .setTitle("Chúc mừng")
+                            .setMessage("Bạn đã hoàn thành bài kiểm tra")
+                            .setPositiveButton("Ok") { _, _ ->
+                                finish()
+                            }.create()
+                        dialogComplete.show()
+                    } else {
                         val intent = Intent(this, QuizActivity::class.java)
                         intent.putExtra("topicId", topicId)
                         intent.putExtra("position", min(position + 1, terminology.size - 1))
                         startActivity(intent)
                         finish()
-                    }.create()
-                dialog.show()
-            }else{
-                val bindingDialog = DialogFalseBinding.inflate(layoutInflater)
-                bindingDialog.tvMeaning.text = terminology[position].terminology
-                bindingDialog.tvAnswer.text = correctAnswer
-                bindingDialog.tvYourAnswer.text = textview.text.toString()
-
-                val dialog = AlertDialog.Builder(this)
-                    .setView(bindingDialog.root)
-                    .setPositiveButton("Ok") { _, _ ->
-                        val intent = Intent(this, QuizActivity::class.java)
-                        intent.putExtra("topicId", topicId)
-                        intent.putExtra("position", min(position + 1, terminology.size - 1 ))
-                        startActivity(intent)
-                        finish()
-                    }.create()
-                dialog.show()
-            }
+                    }
+                }.create()
+            dialog.show()
         }
     }
-    private fun checkAnswer(answer: String, correctAnswer: String): Boolean{
-        if(answer.lowercase().trim() == correctAnswer.lowercase().trim())
+
+    private fun checkAnswer(answer: String, correctAnswer: String): Boolean {
+        if (answer.lowercase().trim() == correctAnswer.lowercase().trim())
             return true
         return false
     }
@@ -173,7 +209,7 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onNetworkAvailable() {
         GlobalScope.launch {
-            if(!dataSyncHelper.getIsSyncDelete())
+            if (!dataSyncHelper.getIsSyncDelete())
                 dataSyncHelper.serverDelete()
             dataSyncHelper.syncData()
         }
