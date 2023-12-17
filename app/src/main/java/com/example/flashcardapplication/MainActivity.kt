@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,8 +22,10 @@ import com.example.flashcardapplication.database.NetworkReceiver
 import com.example.flashcardapplication.database.RoomDb
 import com.example.flashcardapplication.databinding.ActivityMainBinding
 import com.example.flashcardapplication.databinding.CustomViewDialogBinding
+import com.example.flashcardapplication.fragments.GlobalFragment
 import com.example.flashcardapplication.fragments.HomePageFragment
 import com.example.flashcardapplication.fragments.LibraryFragment
+import com.example.flashcardapplication.fragments.ProfileFragment
 import com.example.flashcardapplication.models.Folder
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.firebase.auth.FirebaseAuth
@@ -33,7 +34,8 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class MainActivity : AppCompatActivity(), NetworkListener{
+class MainActivity : AppCompatActivity(), NetworkListener,
+    HomePageFragment.ViewPagerInteraction {
     private lateinit var binding: ActivityMainBinding
     private val networkReceiver = NetworkReceiver(listener = this)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,8 +44,9 @@ class MainActivity : AppCompatActivity(), NetworkListener{
 
         val adapter = ViewPagerAdapter(supportFragmentManager)
         adapter.addFragment(HomePageFragment(), "Trang chủ")
-        adapter.addFragment(HomePageFragment(), "Lời giải") // change this
+        adapter.addFragment(GlobalFragment(), "Lời giải") // change this
         adapter.addFragment(LibraryFragment(), "Thư viện")
+        adapter.addFragment(ProfileFragment(), "Hồ sơ")
 
         if(intent.hasExtra("viewPager")){
             binding.viewPager.currentItem = intent.getIntExtra("viewPager", 0)
@@ -107,6 +110,9 @@ class MainActivity : AppCompatActivity(), NetworkListener{
         unregisterReceiver(networkReceiver)
     }
 
+    override fun goToPage(pageIndex: Int) {
+        binding.viewPager.currentItem = pageIndex
+    }
 }
 
 class ViewPagerAdapter(manager: FragmentManager) : FragmentPagerAdapter(manager) {

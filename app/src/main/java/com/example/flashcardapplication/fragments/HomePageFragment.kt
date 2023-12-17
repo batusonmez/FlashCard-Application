@@ -41,6 +41,7 @@ class HomePageFragment : Fragment(), NetworkListener {
 
     private var dataCourse: ArrayList<Data>? = null
     private var dataFolder: ArrayList<Data>? = null
+    private var viewPagerInteraction: ViewPagerInteraction? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -49,6 +50,7 @@ class HomePageFragment : Fragment(), NetworkListener {
             auth = FirebaseAuth.getInstance(),
             context = context
         )
+        viewPagerInteraction = context as ViewPagerInteraction
     }
     @SuppressLint("SetTextI18n")
     override fun onCreateView(
@@ -84,7 +86,9 @@ class HomePageFragment : Fragment(), NetworkListener {
         }
 
         binding.tvAllCourse.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-        // redirect to all course in layout library
+        binding.tvAllCourse.setOnClickListener {
+            viewPagerInteraction?.goToPage(2)
+        }
 
         val roomDb = context?.let { RoomDb.getDatabase(it) }
         val topics = roomDb?.ApplicationDao()
@@ -122,7 +126,9 @@ class HomePageFragment : Fragment(), NetworkListener {
         )
 
         binding.tvAllFolder.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-        // redirect to all folder in layout library
+        binding.tvAllFolder.setOnClickListener {
+            viewPagerInteraction?.goToPage(2)
+        }
 
 
         val folders = roomDb?.ApplicationDao()
@@ -184,6 +190,10 @@ class HomePageFragment : Fragment(), NetworkListener {
     override fun onStop() {
         super.onStop()
         requireActivity().unregisterReceiver(networkReceiver)
+    }
+
+    interface ViewPagerInteraction {
+        fun goToPage(pageIndex: Int)
     }
 }
 

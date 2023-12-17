@@ -114,6 +114,7 @@ class FolderActivity : AppCompatActivity(), NetworkListener {
         return true
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val bindingDialog = CustomViewDialogBinding.inflate(layoutInflater)
         val roomDb = RoomDb.getDatabase(this)
@@ -187,6 +188,11 @@ class FolderActivity : AppCompatActivity(), NetworkListener {
                             }
                             dataSyncHelper.setIsSync(false)
                             dataSyncHelper.setIsSyncDelete(false)
+                            GlobalScope.launch {
+                                if(!dataSyncHelper.getIsSyncDelete())
+                                    dataSyncHelper.serverDelete()
+                                dataSyncHelper.syncData()
+                            }
                             dialog.dismiss()
 
                             val intent = Intent(this, FolderActivity::class.java)
