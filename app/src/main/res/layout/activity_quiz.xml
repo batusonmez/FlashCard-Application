@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".QuizActivity">
+        <TextView
+            android:id="@+id/tv_terminology"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:text="English Quiz"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_meaning_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Meaning 1"
+            android:padding="10dp"
+            android:layout_margin="12dp"
+            android:background="@drawable/background_quiz"
+            tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_meaning_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Meaning 2"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/background_quiz"
+            tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_meaning_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Meaning 3"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/background_quiz"
+            tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_meaning_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Meaning 4"
+            android:padding="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/background_quiz"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+</layout>

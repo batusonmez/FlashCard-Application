@@ -22,9 +22,13 @@
         android:theme="@style/Theme.FlashCardApplication"
         tools:targetApi="31">
         <activity
-            android:name=".FlashCardActivity"
+            android:name=".QuizActivity"
             android:exported="false"
             android:theme="@style/CreateLessonActivityTheme"/>
+        <activity
+            android:name=".FlashCardActivity"
+            android:exported="false"
+            android:theme="@style/CreateLessonActivityTheme" />
         <activity
             android:name=".StudyActivity"
             android:exported="false"

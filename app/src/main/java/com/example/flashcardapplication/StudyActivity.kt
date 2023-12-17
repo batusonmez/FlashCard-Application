@@ -88,6 +88,12 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
 
         binding.tvQuiz.movementMethod = LinkMovementMethod.getInstance()
         // handle with tvQuiz
+        binding.tvQuiz.setOnClickListener {
+            val intent = Intent(this, QuizActivity::class.java)
+            intent.putExtra("topicId", topicId)
+            intent.putExtra("position", if(topic.terminologies.isNotEmpty()) 0 else -1)
+            startActivity(intent)
+        }
 
         binding.tvTyping.movementMethod = LinkMovementMethod.getInstance()
         // handle with tvTyping

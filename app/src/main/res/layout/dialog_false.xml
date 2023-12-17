@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_margin="20dp"
+        android:padding="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_custom"
+        tools:ignore="RedundantNamespace">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#af001f"
+            android:padding="10dp"
+            android:orientation="horizontal">
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/background_sad"
+                tools:ignore="ContentDescription" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sai"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginStart="20dp"
+                android:layout_gravity="center_vertical"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:orientation="vertical"
+            android:background="@color/white">
+            <TextView
+                android:id="@+id/tv_meaning"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Giá cả phải chăng"
+                android:layout_marginBottom="18dp"
+                android:textSize="20sp"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:text="Đáp án đúng:"
+                android:textColor="#00796B"
+                tools:ignore="HardcodedText" />
+            <TextView
+                android:id="@+id/tv_answer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Affordable"
+                android:textSize="20sp"
+                android:layout_marginBottom="12dp"
+                tools:ignore="HardcodedText" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/gray"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BẠN CHO RẰNG:"
+                android:textColor="#af001f"
+                android:layout_marginBottom="4dp"
+                tools:ignore="HardcodedText" />
+            <TextView
+                android:id="@+id/tv_your_answer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Affordable"
+                android:textSize="20sp"
+                android:layout_marginBottom="12dp"
+                tools:ignore="HardcodedText" />
+        </LinearLayout>
+    </LinearLayout>
+</layout>
