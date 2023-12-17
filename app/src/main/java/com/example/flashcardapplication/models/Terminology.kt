@@ -7,8 +7,8 @@ import androidx.room.PrimaryKey
 data class Terminology(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
-    val terminology: String,
-    val definition: String,
+    var terminology: String,
+    var definition: String,
     val topicId: Int
 ) {
     constructor() : this(0, "", "", 0)

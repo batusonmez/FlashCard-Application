@@ -13,6 +13,8 @@ import android.os.Environment
 import android.speech.tts.TextToSpeech
 import android.text.method.LinkMovementMethod
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -55,6 +57,7 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
     private lateinit var binding: ActivityStudyBinding
     private var roomDb = RoomDb.getDatabase(this)
     private var auth = FirebaseAuth.getInstance()
+    private var idTopic: Int = 1
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +68,7 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
         supportActionBar?.title = "Chủ đề"
 
         val topicId = intent.getIntExtra("topicId", 0)
+        idTopic = topicId
         val topic = roomDb.ApplicationDao()
             .getTopicWithTerminologies(topicId)
 
@@ -203,6 +207,44 @@ class StudyActivity : AppCompatActivity(), NetworkListener {
     override fun onStop() {
         super.onStop()
         unregisterReceiver(networkReceiver)
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.folder_menu, menu)
+        menu?.removeItem(R.id.i_add_folder)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.i_modify_folder -> {
+                val intent = Intent(this, CreateLessonActivity::class.java)
+                intent.putExtra("topicId", idTopic)
+                startActivity(intent)
+            }
+            R.id.i_delete_folder -> {
+                val dialog = AlertDialog.Builder(this)
+                    .setTitle("Bạn có muốn xóa chủ đề này?")
+                    .setMessage("Tất cả thuật ngữ trong chủ đề này sẽ bị xóa")
+                    .setPositiveButton("Có") { _, _ ->
+                        val topic = roomDb.ApplicationDao()
+                            .getTopicWithTerminologies(idTopic)
+                        GlobalScope.launch {
+                            dataSyncHelper.localDelete(null, topic.topic)
+                            dataSyncHelper.setIsSyncDelete(false)
+                            dataSyncHelper.setIsSync(false)
+                            finish()
+                        }
+                    }
+                    .setNegativeButton("Không") { _, _ -> }
+                    .create()
+                dialog.show()
+            }
+            android.R.id.home -> {
+                finish()
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 }
 

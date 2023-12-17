@@ -39,6 +39,14 @@ interface ApplicationDao {
 
     @Transaction
     @Update
+    fun updateAllTerminologies(terminologies: List<Terminology>) {
+        terminologies.forEach {
+            updateTerminology(it)
+        }
+    }
+
+    @Transaction
+    @Update
     fun updateTerminology(terminology: Terminology)
 
     @Transaction

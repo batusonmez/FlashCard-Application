@@ -17,6 +17,7 @@ import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
@@ -54,7 +55,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.io.Serializable
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.min
@@ -62,52 +62,64 @@ import kotlin.math.min
 @Suppress("DEPRECATION", "NAME_SHADOWING")
 class CreateLessonActivity : AppCompatActivity(), NetworkListener {
     private lateinit var binding: ActivityCreateLessonBinding
-    private var data: ArrayList<Term>? = null
+    private var data: ArrayList<Terminology>? = null
     private val networkReceiver = NetworkReceiver(listener = this)
     private val dataSyncHelper = DataSyncHelper(
         firebaseDb = FirebaseFirestore.getInstance(),
         auth = FirebaseAuth.getInstance(),
         context = this
     )
+    private var idTopic : Int = -1
+    private var roomDb = RoomDb.getDatabase(this)
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_create_lesson)
 
-        supportActionBar?.title = "Tạo học phần"
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        binding.tvScan.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-        binding.tvScan.setOnClickListener {
-            requestPermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+        if(intent.hasExtra("topicId")) {
+            supportActionBar?.title = "Sửa học phần"
+
+            val topicId = intent.getIntExtra("topicId", 0)
+            idTopic = topicId
+            Log.e("TAG", "onCreate: $idTopic")
+            val topic = RoomDb.getDatabase(this)
+                .ApplicationDao()
+                .getTopicWithTerminologies(topicId)
+            binding.edtTopic.setText(topic.topic.name)
+            binding.edtDescription.setText(topic.topic.description)
+            data = topic.terminologies as ArrayList<Terminology>
+        }else{
+            supportActionBar?.title = "Tạo học phần"
+
+            binding.tvScan.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+            binding.tvScan.setOnClickListener {
+                requestPermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
+            binding.tvDescription.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+            binding.tvDescription.setOnClickListener {
+                binding.tvDescription.visibility = View.GONE
+                binding.llDescription.visibility = View.VISIBLE
+            }
+
+            // default to add 3 terminology
+            data = ArrayList()
+            for (i in 0..2) {
+                data?.add(Terminology(0, "", "", 0))
+            }
         }
 
-        binding.tvDescription.movementMethod = android.text.method.LinkMovementMethod.getInstance()
-        binding.tvDescription.setOnClickListener {
-            binding.tvDescription.visibility = View.GONE
-            binding.llDescription.visibility = View.VISIBLE
-        }
-
-        // default to add 3 terminology
-        data = ArrayList()
-        for (i in 0..2) {
-            data?.add(Term().apply {
-                terminology = ""
-                definition = ""
-            })
-        }
         data?.let {
-            binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it, supportActionBar!!)
+            binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, it, supportActionBar!!, roomDb, dataSyncHelper)
         }
         val layoutManager = LinearLayoutManager(this)
         binding.rcvCreateLesson.layoutManager = layoutManager
 
         binding.btnCreateLesson.setOnClickListener {
-            data?.add(Term().apply {
-                terminology = ""
-                definition = ""
-            })
+            data?.add(Terminology(0, "", "", 0))
             binding.rcvCreateLesson.adapter?.notifyItemInserted(data!!.size - 1)
             binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(data!!.size - 1, data!!.size)
             binding.rcvCreateLesson.post {
@@ -171,13 +183,10 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
         bufferedReader?.readLine()
         bufferedReader?.forEachLine {
             val line = it.split(",")
-            data?.add(Term().apply {
-                terminology = line[0]
-                definition = line[1]
-            })
+            data?.add(Terminology(0, line[0], line[1], 0))
         }
         bufferedReader?.close()
-        binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, data!!, supportActionBar!!)
+        binding.rcvCreateLesson.adapter = CreateLessonAdapter(this, data!!, supportActionBar!!, roomDb, dataSyncHelper)
         binding.rcvCreateLesson.adapter?.notifyItemRangeChanged(0, data!!.size)
     }
 
@@ -199,16 +208,26 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                 val status = "public"
                 val owner = FirebaseAuth.getInstance().currentUser?.email.toString()
-                val topic = Topic(0, name, description, timestamp, status, owner)
-                val id = database.ApplicationDao().insertTopic(topic).toInt()
-
-                if (id > 0) {
-                    val dataTerm = ArrayList<Terminology>()
-                    for (item in fullData) {
-                        dataTerm.add(Terminology(0, item.terminology!!, item.definition!!, id))
+                if(idTopic != -1){
+                    val topic = Topic(idTopic, name, description, timestamp, status, owner)
+                    database.ApplicationDao().updateTopic(topic)
+                    for(i in 1..100){
+                        Log.e("TAG", "onOptionsItemSelected: ")
                     }
-                    if (dataTerm.isNotEmpty()) {
-                        database.ApplicationDao().insertAllTerminologies(dataTerm)
+                    database.ApplicationDao().updateAllTerminologies(fullData)
+                }
+                else{
+                    val topic = Topic(0, name, description, timestamp, status, owner)
+                    val id = database.ApplicationDao().insertTopic(topic).toInt()
+
+                    if (id > 0) {
+                        val dataTerm = ArrayList<Terminology>()
+                        for (item in fullData) {
+                            dataTerm.add(Terminology(0, item.terminology, item.definition, id))
+                        }
+                        if (dataTerm.isNotEmpty()) {
+                            database.ApplicationDao().insertAllTerminologies(dataTerm)
+                        }
                     }
                 }
 
@@ -246,19 +265,12 @@ class CreateLessonActivity : AppCompatActivity(), NetworkListener {
     }
 }
 
-class Term(
-    var terminology: String? = null,
-    var definition: String? = null
-) : Serializable {
-    override fun toString(): String {
-        return "Terminology(terminology=$terminology, definition=$definition)"
-    }
-}
-
 class CreateLessonAdapter(
     private val context: Context,
-    private val data: ArrayList<Term>,
-    private val supportActionBar: androidx.appcompat.app.ActionBar
+    private val data: ArrayList<Terminology>,
+    private val supportActionBar: androidx.appcompat.app.ActionBar,
+    private val roomDb: RoomDb,
+    private val dataSyncHelper: DataSyncHelper
 ) :
     RecyclerView.Adapter<CreateLessonAdapter.ViewHolder>() {
     private var translatorToVN = false
@@ -299,7 +311,7 @@ class CreateLessonAdapter(
                     val translatedText = withContext(Dispatchers.IO) {
                         translator?.translate(holder.mactvTerminology.text.toString())?.await()
                     }
-                    item.definition = translatedText
+                    item.definition = translatedText!!
                     holder.edtDefinition?.setText(translatedText)
                 }
                 item.terminology = holder.mactvTerminology.text.toString()
@@ -313,7 +325,7 @@ class CreateLessonAdapter(
                         val translatedText = withContext(Dispatchers.IO) {
                             translator?.translate(s.toString())?.await()
                         }
-                        item.definition = translatedText
+                        item.definition = translatedText!!
                         holder.edtDefinition?.setText(translatedText)
                     }
                 }
@@ -362,6 +374,9 @@ class CreateLessonAdapter(
                 if (position == data.size) {
                     supportActionBar.title = data.size.toString() + "/" + data.size
                 }
+                roomDb.ApplicationDao().deleteTerminology(item)
+                dataSyncHelper.setIsSyncDelete(false)
+                dataSyncHelper.setIsSync(false)
             }
         }
 
@@ -395,11 +410,11 @@ class CreateLessonAdapter(
         return vocabularies
     }
 
-    fun getTerminologyData(): ArrayList<Term> {
+    fun getTerminologyData(): ArrayList<Terminology> {
         return data.filter {
-            it.terminology?.isNotEmpty() == true && it.definition?.isNotEmpty() == true
+            it.terminology.isNotEmpty() && it.definition.isNotEmpty()
         }
-                as ArrayList<Term>
+                as ArrayList<Terminology>
     }
 
     private fun downloadModel() {

@@ -7,6 +7,7 @@ import android.net.ConnectivityManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.view.MenuItem
 import androidx.databinding.DataBindingUtil
 import com.example.flashcardapplication.database.DataSyncHelper
 import com.example.flashcardapplication.database.NetworkListener
@@ -100,6 +101,21 @@ class TypingActivity : AppCompatActivity(), NetworkListener {
                     dialog.show()
                 }
             }
+
+            binding.btnVolume.setOnClickListener{
+                textToSpeech = TextToSpeech(this) { status ->
+                    if (status != TextToSpeech.ERROR) {
+                        textToSpeech?.language = Locale.US
+                        textToSpeech?.setSpeechRate(0.8f)
+                        textToSpeech?.speak(
+                            correctAnswer.terminology,
+                            TextToSpeech.QUEUE_ADD,
+                            null,
+                            null
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -124,5 +140,12 @@ class TypingActivity : AppCompatActivity(), NetworkListener {
     override fun onStop() {
         super.onStop()
         unregisterReceiver(networkReceiver)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            finish()
+        }
+        return super.onOptionsItemSelected(item)
     }
 }

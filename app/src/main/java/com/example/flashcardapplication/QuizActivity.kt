@@ -142,6 +142,21 @@ class QuizActivity : AppCompatActivity(), NetworkListener {
                     topicId
                 )
             }
+
+            binding.btnVolume.setOnClickListener{
+                textToSpeech = TextToSpeech(this) { status ->
+                    if (status != TextToSpeech.ERROR) {
+                        textToSpeech?.language = Locale.US
+                        textToSpeech?.setSpeechRate(0.8f)
+                        textToSpeech?.speak(
+                            correctAnswer.terminology,
+                            TextToSpeech.QUEUE_ADD,
+                            null,
+                            null
+                        )
+                    }
+                }
+            }
         }
     }
 
